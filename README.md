@@ -862,6 +862,24 @@ $$=\sum_w (\tilde{p}(w|h)-u_\theta))\nabla (\log u_\theta)$$
 
 (严格地，是$(k+1)\nabla L^* \approx \nabla L$，别忘了我们之前省略了系数)
 
+读到这里，你可能会有点奇怪，这个方法究竟是怎么绕开原来的softmax问题的？事实上很简单，上面直接把计算量最大的归一化系数当成了1来算！你可能还会说，那既然这样，我们在MLE估计的时候直接把归一化系数当成1不是照样很好算吗，可是我们可以发现，如果这样的话，MLE训练时将会让每个$u$越来越大，导致损失函数到无穷大，从而毫无意义！所以这个方法最大的intuition就是说，通过同时采样正例和负例，从而避免了归一化系数过大或者过小可以cheat的方法，然后把归一化系数假设成1来加速计算！
+
+其实前面你可能就会注意到，优化
+$$ L^*=\mathbb{E}_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)$$
+根本没让问题变得更好算啊，因为$$p_{\theta}^*(+|w,h)=\frac{p_{\theta}(w|h)}{kq(w)+p_{\theta}(w|h)}，p_{\theta}^*(-|w,h)=\frac{kq(w)}{kq(w)+p_{\theta}(w|h)}$$
+
+里面的$p_\theta$还是要归一化系数！
+
+> A conceptually simple way to deal with the normalization constraint would be to consider the normalization constant $Z(α)$ as an additional parameter of the model. This approach is, however, not possible
+for Maximum Likelihood Estimation (MLE). **The reason is that the likelihood can be made arbitrarily large
+by making $Z(α)$ go to zero.** Therefore, methods have
+been proposed which estimate the model directly using
+$p^0_m(.; α)$ without computation of the integral which defines the normalization constant; the most recent ones
+are contrastive divergence (Hinton, 2002) and score
+matching (Hyv¨arinen, 2005).
+
+上面这段话来自NCE的[原始论文](#http://proceedings.mlr.press/v9/gutmann10a/gutmann10a.pdf)，其中提到，事实上，基于一些别的损失函数的模型训练中，可以直接采用用模型来估计归一化系数$Z$或者直接使用$p^0$(也就是我们的没有归一化的概率，相当于把$Z$当成1)，只是在MLE的时候，会出现明显问题(如果模型估计$Z$,那非常趋近于0导致loss是负无穷,如果$Z$当成1,让$u$很大也是一个道理)。于是只要避免这个明显的问题，我们就可以用同样的方法了！从这里我们也可以看到深度学习理论和实践之间的差距，许多理论并没有特别严格的数学解释保证一定正确，只要解决trivial的问题避免模型简单地cheat,在实际应用中就可能是可行的。
+
 ##### 3.4.3.2 Make Inferencing Better: Beam Search
 
 在模型生成的时候，我们一般是给定上文，然后使用贪心算法，每次找当前概率最大的词$w_t=\argmax_w{p(w|w_1w_2\dots w_{t-1})}$,然而，这样真的能保证最后生成的句子$w_1w_2\dots w_T$是最好的吗？抛开概率大小和好坏的关系不谈，这个甚至不一定是概率最大的！从数学上来说，如果要找到概率最大的句子，我们需要遍历所有可能的句子，这是不现实的。但是，如果使用贪心算法，又容易因为某个词被"带偏",陷入局部最优解。举个具体例子，假如我们现在有某个模型，给定上文"我爱"，它的概率分布是:(苹果，p=0.45),(大象, p=0.1),(大人, p=0.08),(大妈, p=0.12), (大便, p=0.05), (大军, p=0.05),(大米, p=0.08),(大姐, p=0.07).（按照道理来说，应该生成的是条件概率，但是为了方便，我们直接用概率来表示）,那么，如果我们使用贪心算法，第二个字应该会生成"大"(p=0.55),然后最终就生成了"我爱大妈"，可是这个句子的概率并不是最大的！事实上，最大的句子应该是"我爱苹果"！这就是贪心算法的局限性。
