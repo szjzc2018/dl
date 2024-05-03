@@ -7,19 +7,24 @@ def preprocess(s:str):
         line = lines[0]
         i =  line.find('$$')
         if i != -1:
-            new_lines.append(line[:i])
+            if line[:i] != '':
+                new_lines.append(line[:i])
             new_lines.append('$$')
-            lines[0] = line[i+2:]
+            if line[i+2:] != '':
+                lines[0] = line[i+2:]
+            else:
+                lines = lines[1:]
         else:
             new_lines.append(line)
             lines = lines[1:]
-    return [c for c in new_lines if c != '']
+    return new_lines
 
 def process(s:str):
     """
     2.行间公式前后必须有空行
     """
     lines = preprocess(s)
+    # print(lines)
     inline_formula = False
     last_inline = -1
     add_newlines = 0
@@ -75,8 +80,8 @@ def format(s:str):
             
     return '\n'.join(new_lines)
 if __name__ == '__main__':
-    IN = './source.md'
-    OUT = './README.md'
+    IN = './source.md'#'./test.md'
+    OUT = './README.md'#'./test_out.md'
     s = open(IN,'r').read()
     # open('./test_out.md','w').write(preprocess(s))
     open(OUT,'w').write(format(s))
