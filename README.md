@@ -820,7 +820,7 @@ $$
 因此，我们可以解出discriminator的最优解 $D(x)^{*}$ ：
 
 $$
-D(x)^*=\frac{p_{\text{data}}(x)}{p_{\text{data}}(x)+p_G(x)}.
+D(x)^\*=\frac{p_{\text{data}}(x)}{p_{\text{data}}(x)+p_G(x)}.
 $$
 
 我们进而可以把这个表达式代入，得到 $G$ 的优化目标：
@@ -1480,14 +1480,14 @@ $$
 
 
 $$
-\tilde{p}^*(Y,w,h);p_{\theta}^*(Y,w,h)
+\tilde{p}^\*(Y,w,h);p_{\theta}^\*(Y,w,h)
 $$
 
 然后，我们的目标变成让这两个三元分布接近，转化成让
 
 
 $$
-\tilde{p}^*(Y|w,h) \approx p_{\theta}^*(Y|w,h)
+\tilde{p}^\*(Y|w,h) \approx p_{\theta}^\*(Y|w,h)
 $$
 
 
@@ -1496,66 +1496,66 @@ $$
  
 
 $$
-L^*=E_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)
+L^\*=E_{(Y,w)\sim \tilde{p}^\*(Y,w|h)}\log p_{\theta}^\*(Y|w,h)
 $$
 
-注意期望是 $\tilde{p}^*(Y,w|h)$ 采样，而 $\log$ 里是 $p_{\theta}^*(Y|w,h)$ .这样，我们的问题就变成了**二分类问题**，从而可以快速计算！
+注意期望是 $\tilde{p}^\*(Y,w|h)$ 采样，而 $\log$ 里是 $p_{\theta}^\*(Y|w,h)$ .这样，我们的问题就变成了**二分类问题**，从而可以快速计算！
 
 这里有两个可能引起误解的点:
 
-- 1. $\tilde{p}^*$ 是由 $\tilde{p}$ 经过上面的特定方法生成的三元分布，而它并不只是简单地给每个句子加上标签，也就是说它的边缘分布 $\tilde{p}^*(+,w|h)+\tilde{p}^*(-,w|h)$ 一般来说并不等于 $\tilde{p}(w|h)$ !
-- 2.我们为什么可以优化这个对象？我们将接下来证明，在某些假定下， $L^*$ 的梯度和 $L$ 是相等的！所以我们可以把 $\nabla L^*$ 当成 $\nabla L$ 的近似。
+- 1. $\tilde{p}^\*$ 是由 $\tilde{p}$ 经过上面的特定方法生成的三元分布，而它并不只是简单地给每个句子加上标签，也就是说它的边缘分布 $\tilde{p}^\*(+,w|h)+\tilde{p}^\*(-,w|h)$ 一般来说并不等于 $\tilde{p}(w|h)$ !
+- 2.我们为什么可以优化这个对象？我们将接下来证明，在某些假定下， $L^\*$ 的梯度和 $L$ 是相等的！所以我们可以把 $\nabla L^\*$ 当成 $\nabla L$ 的近似。
 
-现在，我们来推导 $\nabla L^*$ 和 $\nabla L$ 的关系.我们首先来计算 $\tilde{p}^*,p_{\theta}^*$ 的分布:
-
-
-
-$$
-\tilde{p}^*(+,w|h)=\tilde{p}^*(+|h)\tilde{p}^*(w|+,h) =\frac{1}{k+1} \tilde{p}(w|h)
-$$
+现在，我们来推导 $\nabla L^\*$ 和 $\nabla L$ 的关系.我们首先来计算 $\tilde{p}^\*,p_{\theta}^\*$ 的分布:
 
 
 
 $$
-\tilde{p}^*(-,w|h)=\tilde{p}^*(-|h)\tilde{p}^*(w|-,h)=\frac{k}{k+1} q(w)
-$$
-
-
-$$
-\to \tilde{p}^*(w|h)=\frac{1}{k+1} \tilde{p}(w|h)+\frac{k}{k+1} q(w)
+\tilde{p}^\*(+,w|h)=\tilde{p}^\*(+|h)\tilde{p}^\*(w|+,h) =\frac{1}{k+1} \tilde{p}(w|h)
 $$
 
 
 
 $$
- \tilde{p}^*(+|w,h)=\frac{\tilde{p}^*(+,w|h)}{\tilde{p}^*(w|h)}=\frac{\tilde{p}(w|h)}{kq(w)+\tilde{p}(w|h)}
+\tilde{p}^\*(-,w|h)=\tilde{p}^\*(-|h)\tilde{p}^\*(w|-,h)=\frac{k}{k+1} q(w)
 $$
-
-$$
- \tilde{p}^*(-|w,h)=\frac{\tilde{p}^*(-,w|h)}{\tilde{p}^*(w|h)}=\frac{kq(w)}{kq(w)+\tilde{p}(w|h)}
-$$
-
-类似的，我们可以计算 $p_{\theta}^*$ 的分布:
-
 
 
 $$
-p_{\theta}^*(+|w,h)=\frac{p_{\theta}^*(+,w|h)}{p_{\theta}^*(w|h)}=\frac{p_{\theta}(w|h)}{kq(w)+p_{\theta}(w|h)}
+\to \tilde{p}^\*(w|h)=\frac{1}{k+1} \tilde{p}(w|h)+\frac{k}{k+1} q(w)
+$$
+
+
+
+$$
+ \tilde{p}^\*(+|w,h)=\frac{\tilde{p}^\*(+,w|h)}{\tilde{p}^\*(w|h)}=\frac{\tilde{p}(w|h)}{kq(w)+\tilde{p}(w|h)}
+$$
+
+$$
+ \tilde{p}^\*(-|w,h)=\frac{\tilde{p}^\*(-,w|h)}{\tilde{p}^\*(w|h)}=\frac{kq(w)}{kq(w)+\tilde{p}(w|h)}
+$$
+
+类似的，我们可以计算 $p_{\theta}^\*$ 的分布:
+
+
+
+$$
+p_{\theta}^\*(+|w,h)=\frac{p_{\theta}^\*(+,w|h)}{p_{\theta}^\*(w|h)}=\frac{p_{\theta}(w|h)}{kq(w)+p_{\theta}(w|h)}
 $$
  
 
 $$
-p_{\theta}^*(-|w,h)=\frac{p_{\theta}^*(-,w|h)}{p_{\theta}^*(w|h)}=\frac{kq(w)}{kq(w)+p_{\theta}(w|h)}
+p_{\theta}^\*(-|w,h)=\frac{p_{\theta}^\*(-,w|h)}{p_{\theta}^\*(w|h)}=\frac{kq(w)}{kq(w)+p_{\theta}(w|h)}
 $$
 
-从而，我们可以计算 $L^*$ :
+从而，我们可以计算 $L^\*$ :
 
 $$
-L^*=E_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)
+L^\*=E_{(Y,w)\sim \tilde{p}^\*(Y,w|h)}\log p_{\theta}^\*(Y|w,h)
 $$
 
 $$
-=\sum_w (\tilde{p}^*(+,w|h)\log p_{\theta}^*(+|w,h)+\tilde{p}^*(-,w|h)\log p_{\theta}^*(-|w,h))
+=\sum_w (\tilde{p}^\*(+,w|h)\log p_{\theta}^\*(+|w,h)+\tilde{p}^\*(-,w|h)\log p_{\theta}^\*(-|w,h))
 $$
 
 $$
@@ -1571,13 +1571,13 @@ $$
 这样，我们可以得到 $p_{\theta}(w|h)\approx u_{\theta}(w,h)$ (还记得这些符号的[定义](#def)吗？)，从而我们可以得到(为了方便起见，我们省略最前面的常数 $\frac{1}{k+1}$ ):
 
 $$
-L^*=\sum_w(\tilde{p}(w|h)\log \frac{u_{\theta}(w,h)}{kq(w)+u_{\theta}(w,h)}+kq(w)\log \frac{kq(w)}{kq(w)+u_{\theta}(w,h)})
+L^\*=\sum_w(\tilde{p}(w|h)\log \frac{u_{\theta}(w,h)}{kq(w)+u_{\theta}(w,h)}+kq(w)\log \frac{kq(w)}{kq(w)+u_{\theta}(w,h)})
 $$
 
-故我们可以来计算 $\nabla L^*$ (为简单起见，我们在下面的中间过程里用 $q$ 表示 $q(w)$ , $u_{\theta}$ 表示 $u_{\theta}(w,h)$ ):
+故我们可以来计算 $\nabla L^\*$ (为简单起见，我们在下面的中间过程里用 $q$ 表示 $q(w)$ , $u_{\theta}$ 表示 $u_{\theta}(w,h)$ ):
 
 $$
-\nabla L^*=\sum_w \nabla(\tilde{p}(w|h)\log \frac{u_{\theta}}{kq+u_{\theta}}+kq\log \frac{kq}{kq+u_{\theta}})
+\nabla L^\*=\sum_w \nabla(\tilde{p}(w|h)\log \frac{u_{\theta}}{kq+u_{\theta}}+kq\log \frac{kq}{kq+u_{\theta}})
 $$
 
 $$
@@ -1616,22 +1616,22 @@ $$
 
 其中最后一步还是用到了 $p_{\theta}(w|h)\approx u_{\theta}(w,h)$ .
 
-从而，我们推出了，当 $k$ 足够大的时候， $\nabla L^* \approx \nabla L$ ！
+从而，我们推出了，当 $k$ 足够大的时候， $\nabla L^\* \approx \nabla L$ ！
 
-(严格地，是 $(k+1)\nabla L^* \approx \nabla L$ ，别忘了我们之前省略了系数)
+(严格地，是 $(k+1)\nabla L^\* \approx \nabla L$ ，别忘了我们之前省略了系数)
 
 读到这里，你可能会有点奇怪，这个方法究竟是怎么绕开原来的softmax问题的？事实上很简单，上面直接把计算量最大的归一化系数当成了1来算！你可能还会说，那既然这样，我们在MLE估计的时候直接把归一化系数当成1不是照样很好算吗，可是我们可以发现，如果这样的话，MLE训练时将会让每个 $u$ 越来越大，导致损失函数到无穷大，从而毫无意义！所以这个方法最大的intuition就是说，通过同时采样正例和负例，从而避免了归一化系数过大或者过小可以cheat的方法，然后把归一化系数假设成1来加速计算！
 
 其实前面你可能就会注意到，优化
 
 $$
-L^*=E_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)
+L^\*=E_{(Y,w)\sim \tilde{p}^\*(Y,w|h)}\log p_{\theta}^\*(Y|w,h)
 $$
 
 根本没让问题变得更好算啊，因为
 
 $$
-p_{\theta}^*(+|w,h)=\frac{p_{\theta}(w|h)}{kq(w)+p_{\theta}(w|h)}，p_{\theta}^*(-|w,h)=\frac{kq(w)}{kq(w)+p_{\theta}(w|h)}
+p_{\theta}^\*(+|w,h)=\frac{p_{\theta}(w|h)}{kq(w)+p_{\theta}(w|h)}，p_{\theta}^\*(-|w,h)=\frac{kq(w)}{kq(w)+p_{\theta}(w|h)}
 $$
 
 里面的 $p_\theta$ 还是要归一化系数！
