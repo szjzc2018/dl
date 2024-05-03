@@ -69,7 +69,7 @@ $X_0$ 究竟是什么呢?我们可以发现这和我们任务的定义有关，�
 SGD的数学表达式可以写成这样:
 
 $$
-\theta_{t+1}=\theta_t-\eta \nabla \mathbb{E}_{x \sim B}[L(\theta_t, x)]
+\theta_{t+1}=\theta_t-\eta \nabla E_{x \sim B}[L(\theta_t, x)]
 $$
 
 ,
@@ -84,7 +84,7 @@ $B$ 是一个batch, $\eta$ 是学习率， $L$ 是损失函数。
 Momentum的数学表达式可以写成这样:
 
 $$
-v_{t+1}=\gamma v_t+\eta \nabla \mathbb{E}_{x \sim B}[L(\theta_t, x)]
+v_{t+1}=\gamma v_t+\eta \nabla E_{x \sim B}[L(\theta_t, x)]
 $$
 
 $$
@@ -100,11 +100,11 @@ Adam是一种结合了SGD和Momentum的优化算法，它的优点是可以自�
 Adam的数学表达式可以写成这样:
 
 $$
-m_{t+1}=\beta_1 m_t+(1-\beta_1)\nabla \mathbb{E}_{x \sim B}[L(\theta_t, x)]
+m_{t+1}=\beta_1 m_t+(1-\beta_1)\nabla E_{x \sim B}[L(\theta_t, x)]
 $$
 
 $$
-v_{t+1}=\beta_2 v_t+(1-\beta_2)(\nabla \mathbb{E}_{x \sim B}[L(\theta_t, x)])^2
+v_{t+1}=\beta_2 v_t+(1-\beta_2)(\nabla E_{x \sim B}[L(\theta_t, x)])^2
 $$
 
 $$
@@ -459,12 +459,12 @@ $$
 =\frac{1}{2}\sum_{x}\frac{e^{\frac{1}{2}x^TWx}}{Z}x^Tx
 $$
 
-我们发现一个神奇的事情， $\frac{e^{\frac{1}{2}x^TWx}}{Z}$ 正是我们取到 $x$ 的概率!所以实际上这个式子就是我们在计算 $\mathbb{E}_{x \in D}x^Tx$ ，其中 $D$ 是我们的概率模型所代表的概率分布。这样，我们就可以通过采样来估计这个值，从而计算梯度。
+我们发现一个神奇的事情， $\frac{e^{\frac{1}{2}x^TWx}}{Z}$ 正是我们取到 $x$ 的概率!所以实际上这个式子就是我们在计算 $E_{x \in D}x^Tx$ ，其中 $D$ 是我们的概率模型所代表的概率分布。这样，我们就可以通过采样来估计这个值，从而计算梯度。
 
 总结一下，
 
 $$
-\nabla_{W}(L)=\frac{1}{|P|}(\sum_{x\in P}x^Tx)-\mathbb{E}_{x \in D}x^Tx
+\nabla_{W}(L)=\frac{1}{|P|}(\sum_{x\in P}x^Tx)-E_{x \in D}x^Tx
 $$
 
 其中 $D$ 是当前的概率模型所代表的概率分布。（我们在下文中也采取这个记号表示当前模型所对应的概率分布）你可能会注意到我们丢掉了系数 $\frac{1}{2}$ ,这是因为我们之前假设 $W$ 是一个对陈矩阵，所以每个分量的梯度实际上被计算了两次，当 $W$ 不是对陈矩阵的时候，我们就需要加上这个系数。不过一般来说，这个系数并不重要，因为我们的目的是让梯度下降，而这个系数只是一个缩放。
@@ -483,8 +483,8 @@ Gibbs Sampling是一种常见的采样方法，它的基本思想是，我们先
 
 ###### 2.1.1.3.2 Importance Sampling
 
-Importance Sampling 用来解决计算在某个分布下估计函数期望的问题，具体地，如果我们要估计 $\mathbb{E}_{x \sim p}f(x)$ , 但从 $p$
-中采样及其困难，因为我们只有未归一化的概率而没有归一化系数。那么，我们可以找一个简单，好采样的分布 $q$ , 然后估计 $\mathbb{E}_{x \sim q}f(x)\frac{p(x)}{q(x)}$ ，这两个期望在数学上是相等的，然而通过“换元”我们得到了一个更好采样的分布。
+Importance Sampling 用来解决计算在某个分布下估计函数期望的问题，具体地，如果我们要估计 $E_{x \sim p}f(x)$ , 但从 $p$
+中采样及其困难，因为我们只有未归一化的概率而没有归一化系数。那么，我们可以找一个简单，好采样的分布 $q$ , 然后估计 $E_{x \sim q}f(x)\frac{p(x)}{q(x)}$ ，这两个期望在数学上是相等的，然而通过“换元”我们得到了一个更好采样的分布。
 
 我们可以用一个例子来理解Importance Sampling: 假如面前有 $N$ 箱不同的水果，每箱水果的种类和个数都不一样（单个箱子里的水果重量都是一样的），我们想通过采样来算出单个水果的平均重量。(重量代表 $f$ ,每箱水果代表一个 $x$ ,个数代表未归一化的 $p$ )
 
@@ -514,7 +514,7 @@ $$
 - 2.使用Gibbs Sampling采样，从而估计梯度，做梯度下降
 
 $$
-\nabla_W L = \frac{1}{|P|}(\sum_{x\in P}x^Tx)-\mathbb{E}_{x \in D}x^Tx
+\nabla_W L = \frac{1}{|P|}(\sum_{x\in P}x^Tx)-E_{x \in D}x^Tx
 $$
 
 - 3.重复2直到收敛
@@ -700,7 +700,7 @@ $$
 $$
 
 $$
-=\mathbb{E}_{x\sim Uni(P)}[\mathbb{E}_{z\sim q(z|x)}[\log p(x|z)]-KL(q(z|x)||p(z))]
+=E_{x\sim Uni(P)}[E_{z\sim q(z|x)}[\log p(x|z)]-KL(q(z|x)||p(z))]
 $$
 
 经过上面的数学变形，我们发现，这个loss有了直观的意义：第一项称为reconstruction loss, $q$ 就像一个编码器，把图片 $x$ 编码成特征 $z$ ，而 $p$ 则想以最大概率恢复原来的图片，第二项称为KL散度，它想让 $q$ 和 $p$ 尽量接近，从而让 $q$ 的取样和真实情况更接近。
@@ -713,7 +713,7 @@ ELBO=\log p(x)-KL(q(z|x)||p(z|x))
 $$
 
 $$
-ELBO=\mathbb{E}_{x\sim Uni(P)}[\mathbb{E}_{z\sim q(z|x)}[\log p(x|z)]-KL(q(z|x)||p(z))]
+ELBO=E_{x\sim Uni(P)}[E_{z\sim q(z|x)}[\log p(x|z)]-KL(q(z|x)||p(z))]
 $$
 
 第一种表示说明它在生成模型的训练和proposal的训练中都起到了evaluation的作用，所以可以作为统一的损失函数，而第二种表示则给出了直观的意义，同时变为了方便采样计算的结构。
@@ -741,7 +741,7 @@ $$
 回到 $ELBO$ 的可采样形式
 
 $$
-ELBO=\mathbb{E}_{z\sim q_{\phi}(z|x)}[\log p_{\theta}(x|z)]-KL(q_{\phi}(z|x)||p_{\theta}(z))
+ELBO=E_{z\sim q_{\phi}(z|x)}[\log p_{\theta}(x|z)]-KL(q_{\phi}(z|x)||p_{\theta}(z))
 $$
 
 我们注意到第二项就是两个高斯分布的KL散度，可以直接计算，而第一项则是一个期望，我们可以通过采样来估计。
@@ -781,7 +781,7 @@ $q$ 变为 $q_{\phi}(y,z|x)$
 
 对有标签的数据，我们只需要在loss中加入一项cross-entropy loss between $q(y|x)$ 和 $y$ 即可
 
-对无标签的数据，我们让KL penalty 变成 $KL(q(z)||p(z))+KL(q(y)||p(y))$ , 对于 $p(y)$ 我们可以取一个uniform distribution. 而 reconstruction loss 则变成 $\mathbb{E}_{z,y\sim q(z,y)}[\log p(x|z,y)]$ 但此时 $y$ 会变得难以sample从而不好计算梯度，当种类比较少的时候可以通过每一类枚举来计算，而种类比较多的时候我们将要使用一些特别的办法来处理.(~~我也不会~~)
+对无标签的数据，我们让KL penalty 变成 $KL(q(z)||p(z))+KL(q(y)||p(y))$ , 对于 $p(y)$ 我们可以取一个uniform distribution. 而 reconstruction loss 则变成 $E_{z,y\sim q(z,y)}[\log p(x|z,y)]$ 但此时 $y$ 会变得难以sample从而不好计算梯度，当种类比较少的时候可以通过每一类枚举来计算，而种类比较多的时候我们将要使用一些特别的办法来处理.(~~我也不会~~)
 
 ### 2.2 Generative Adversarial Network (GAN)
 
@@ -984,7 +984,7 @@ $$
 是一个常数。这有点违背我们对divergence的直觉——作为一种“距离”，即使是两个分布disjoint，也应该大概能反映一些它们之间差距的信息，而不是应该是常数。一个数学上的可行候选人是 **Wasserstein Distance**：
 
 $$
-W(P,Q)=\inf_{\gamma\in \Pi(P,Q)}\mathbb{E}_{(x,y)\sim \gamma}[||x-y||]
+W(P,Q)=\inf_{\gamma\in \Pi(P,Q)}E_{(x,y)\sim \gamma}[||x-y||]
 $$
 
 其中 $\Pi(P,Q)$ 代表 $\gamma$ 从所有的二元分布中选取，并且必须满足
@@ -1004,13 +1004,13 @@ $$
 首先，我们立刻可以看到这个距离即使在两个分布完全disjoint的时候也具有有限大小的梯度——它大概线性相关于两个分布的中心距离。其次，我们也大概能猜到，这个距离可以接受多个mode，而不是像JSD一样集中在某个mode上面。唯一的问题是，怎么计算这个距离？在给定两个逆天的要求下求inf，听起来就不是一个neural network可以做的事情。但是所幸我们有一个重要的数学恒等式——**Kantorovich-Rubinstein duality**：
 
 $$
-W(P,Q)=\sup_{||f||_L\leq 1}\left(\mathbb{E}_{x\sim P}[f(x)]-\mathbb{E}_{y\sim Q}[f(y)]\right).
+W(P,Q)=\sup_{||f||_L\leq 1}\left(E_{x\sim P}[f(x)]-E_{y\sim Q}[f(y)]\right).
 $$
 
 这里的sup是对所有1-Lipchitz的函数求。自然地，我们可以用一个神经网络实现 $f$ （虽然已经没有明确的意义，但也可以叫“discriminator”），而用 generator实现 $Q$ 来拟合data distribution $P$ 。这样，WGAN（**Wasserstein GAN**）就诞生了：
 
 $$
-L(\theta,\phi)=\min_{\theta}\max_{||f||_L\leq 1}\left(\mathbb{E}_{x\sim p_{\text{data}}}[f(x;\phi)]-\mathbb{E}_{\hat{x}\sim G_\theta}[f(\hat{x};\phi)]\right).
+L(\theta,\phi)=\min_{\theta}\max_{||f||_L\leq 1}\left(E_{x\sim p_{\text{data}}}[f(x;\phi)]-E_{\hat{x}\sim G_\theta}[f(\hat{x};\phi)]\right).
 $$
 
 现在唯一的问题就是如何保证 $f$ 是1-Lipchitz的。这里，一个重要的思想是 **Weight Clipping**：只要我们参数的绝对值不太大，那么我们就可以保证 $f$ 是1-Lipchitz的。实际上我们简单粗暴地
@@ -1030,7 +1030,7 @@ WGAN具有很好的训练稳定性，大幅避免了gradient vanishing和mode co
 我们前面也看到，WGAN的训练最难的一点是如何限制 $f$ 是1-Lipchitz的。前面粗暴的Weight Clipping方法不能很好地刻画这个要求。这时，有一个很好的想法出现了：我们限制 $f$ 是1-Lipchitz的，那么取到最大值的时候， $f$ 一定梯度基本上处处为1.因此，我们可以**直接限制 $f$ 的梯度模长为1**。这个方法被称为 **Gradient Penalty**。此时，我们就可以定义一个新的目标：
 
 $$
-L(\theta,\phi)=\min_{\theta}\max_{\phi}\left(\mathbb{E}_{x\sim p_{\text{data}}}[f(x;\phi)]-\mathbb{E}_{\hat{x}\sim G_\theta}[f(\hat{x};\phi)]+\lambda E_{\tilde{x}}[(|\nabla_{\tilde{x}}f(\tilde{x};\phi)|^2-1)^2]\right),
+L(\theta,\phi)=\min_{\theta}\max_{\phi}\left(E_{x\sim p_{\text{data}}}[f(x;\phi)]-E_{\hat{x}\sim G_\theta}[f(\hat{x};\phi)]+\lambda E_{\tilde{x}}[(|\nabla_{\tilde{x}}f(\tilde{x};\phi)|^2-1)^2]\right),
 $$
 
 其中 $\tilde{x}$ 来自一个数据集和生成集合的混合分布：
@@ -1378,109 +1378,79 @@ $$
 tldr:这一小节讲了一个加速训练的方法:NCE,它的想法和之前类似，把多分类问题转化为二分类问题。本节主要是数学计算，如果不感兴趣，可以跳过，对理解整体内容没有太大影响。
 
 回顾我们的Language Model的训练，具体地，我们希望我们模型输出的概率分布和真实分布（训练的时候，就是训练语料的分布）接近，于是我们用MLE的方法优化我们的模型，在这里，我们先定义一些符号:
-`<span id="def">`
-
-> 
 
 $$
-> h:上文，w:下一个词
-> 
+h:上文，w:下一个词
 $$
 
->
-> 
-
 $$
-> \tilde{p}(w|h):真实(训练语料)的分布
-> 
+\tilde{p}(w|h):真实(训练语料)的分布 
 $$
 
->
-> 
-
 $$
-> c_{\theta}(w,h):模型对于w和h输出的结果
-> 
+c_{\theta}(w,h):模型对于w和h输出的结果 
 $$
 
->
-> 
-
 $$
-> u_{\theta}(w,h)=e^{c_{\theta}(w,h)}:模型预测的未归一化的概率
-> 
+u_{\theta}(w,h)=e^{c_{\theta}(w,h)}:模型预测的未归一化的概率 
 $$
 
->
-> 
-
 $$
-> p_{\theta}(w|h)=softmax(c_{\theta})=\frac{u_{\theta}(w,h)}{Z_{\theta,h}}:模型预测的概率
-> 
+p_{\theta}(w|h)=softmax(c_{\theta})=\frac{u_{\theta}(w,h)}{Z_{\theta,h}}:模型预测的概率 
 $$
 
->
-> 
-
 $$
-> Z_{\theta,h}=\sum_{w} u_{\theta}(w,h):归一化因子
-> 
+Z_{\theta,h}=\sum_{w} u_{\theta}(w,h):归一化因子
 $$
 
 这里要注意，我们之后会用到很多的不同的概率分布，请不要弄混，另外下标带 $\theta$ 说明与模型有关，否则与模型无关. 如果你在中间某步突然不能理解，请检查一下是不是弄混了不同的概率分布！
 
 我们的目标是:
 
-> 
-
 $$
-> p_{\theta}(w|h) \approx \tilde{p}(w|h)
-> 
+p_{\theta}(w|h) \approx \tilde{p}(w|h)
 $$
 
 你可能会有疑问，为什么训练集合是个概率分布？这是因为i同一个词可能多次出现，比如说训练语料集合是 $\{$ "我是人","你很强","我爆零了","我是吊打" $\}$ ,那么给定上文"我",下一个词应该是一个概率分布:("是", $p=\frac{2}{3}$ ),("爆", $p=\frac{1}{3}$ ),(else, $p=0$ ).我们希望我们的模型生成的概率也是这样。
 
 从而，我们使用MLE优化，它的损失函数定义为:
 
-> 
-
 $$
-> L=\mathbb{E}_{w\sim \tilde{p}(w|h)}\log p_{\theta}(w|h)
-> 
+L=E_{w\sim \tilde{p}(w|h)}\log p_{\theta}(w|h)
 $$
 
 那么，我们可以进行计算:
 
 $$
-\nabla L = \nabla \mathbb{E}_{w\sim \tilde{p}(w|h)}\log p_{\theta}(w|h)
+\nabla L = \nabla E_{w\sim \tilde{p}(w|h)}\log p_{\theta}(w|h)
 $$
 
 $$
-= \mathbb{E}_{w\sim \tilde{p}(w|h)}\nabla \log p_{\theta}(w|h)
+= E_{w\sim \tilde{p}(w|h)}\nabla \log p_{\theta}(w|h)
 $$
 
 $$
-= \mathbb{E}_{w\sim \tilde{p}(w|h)}[\nabla \log \frac{u_{\theta}(w,h)}{Z_{\theta,h}}]
+= E_{w\sim \tilde{p}(w|h)}[\nabla \log \frac{u_{\theta}(w,h)}{Z_{\theta,h}}]
 $$
 
 $$
-= \mathbb{E}_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\nabla \log Z_{\theta,h}
+= E_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\nabla \log Z_{\theta,h}
 $$
 
 $$
-= \mathbb{E}_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\frac{\sum_{w}\nabla u_{\theta}(w,h)}{Z_{\theta,h}}
+= E_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\frac{\sum_{w}\nabla u_{\theta}(w,h)}{Z_{\theta,h}}
 $$
 
 $$
-= \mathbb{E}_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\frac{\sum_{w}e^{c_{\theta}(w,h)}\nabla c_{\theta}(w,h)}{Z_{\theta,h}}
+= E_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\frac{\sum_{w}e^{c_{\theta}(w,h)}\nabla c_{\theta}(w,h)}{Z_{\theta,h}}
 $$
 
 $$
-= \mathbb{E}_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\sum_{w}p_{\theta}(w,h)\nabla c_{\theta}(w,h)
+= E_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\sum_{w}p_{\theta}(w,h)\nabla c_{\theta}(w,h)
 $$
 
 $$
-= \mathbb{E}_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\mathbb{E}_{w\sim p(w|h)}[\nabla c_{\theta}(w,h)]
+= E_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-E_{w\sim p(w|h)}[\nabla c_{\theta}(w,h)]
 $$
 
 这里我们默认所有的 $\nabla$ 都是对 $\theta$ 求梯度，所以和 $\theta$ 无关的项可以被当成常数。虽然最后梯度化成了很优美的形式，但是有一个很严重的问题：第二项根本不好估计！为了从 $p(w|h)$ 里面采样，我们需要对每个词都算出对应的概率取softmax,而这对计算力的要求是很高的(但是也有好消息，因为这些计算之间两两无关，所以可以并行进行，从而随着GPU算力的提高，越来越多模型直接用MLE来优化)。或许你会说，我们是不是可以用类似Importance Sampling的估计方法来采样？然而，这依然不现实，因为事实上， $p$ 的分布在模型有一定能力的时候应该非常不平均，少数的词占有几乎所有概率(想象给定一段上文，下一个合理的单词可能比上全部单词的集合是多么小！)，导致proposal distribution里采样大概率全都是对后面一项没有任何贡献的东西，导致方差极大，而想要取到有用的样本，在可行的词很少的情况下期望上需要的采样次数和词库的量级相等！当然，如果真的要采这么多样，还不如直接全部算一遍呢。
@@ -1509,7 +1479,7 @@ $$
 > 
 
 $$
-> L=\mathbb{E}_{w\sim \tilde{p}(w|h)}\log p_{\theta}(w|h)
+> L=E_{w\sim \tilde{p}(w|h)}\log p_{\theta}(w|h)
 > 
 $$
 
@@ -1539,7 +1509,7 @@ $$
 > 
 
 $$
-> L^*=\mathbb{E}_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)
+> L^*=E_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)
 > 
 $$
 
@@ -1612,7 +1582,7 @@ $$
 从而，我们可以计算 $L^*$ :
 
 $$
-L^*=\mathbb{E}_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)
+L^*=E_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)
 $$
 
 $$
@@ -1664,7 +1634,7 @@ $$
 而我们上面已经计算过(~~我猜你已经忘了~~):
 
 $$
-\nabla L = \mathbb{E}_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-\mathbb{E}_{w\sim p(w|h)}[\nabla c_{\theta}(w,h)]
+\nabla L = E_{w\sim \tilde{p}(w|h)}[\nabla c_{\theta}(w,h)]-E_{w\sim p(w|h)}[\nabla c_{\theta}(w,h)]
 $$
 
 $$
@@ -1686,7 +1656,7 @@ $$
 其实前面你可能就会注意到，优化
 
 $$
-L^*=\mathbb{E}_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)
+L^*=E_{(Y,w)\sim \tilde{p}^*(Y,w|h)}\log p_{\theta}^*(Y|w,h)
 $$
 
 根本没让问题变得更好算啊，因为
