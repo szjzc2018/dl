@@ -84,4 +84,4 @@ if __name__ == '__main__':
     OUT = './README.md'#'./test_out.md'
     s = open(IN,'r').read()
     # open('./test_out.md','w').write(preprocess(s))
-    open(OUT,'w').write(format(s))
+    open(OUT,'w').write(format(s.replace('^*','^\*')))
