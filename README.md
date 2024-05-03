@@ -1044,6 +1044,8 @@ $$
 L_{\text{consistency}}=\lambda E_{x\sim X}[|F(G(x))-x|]+\lambda E_{y\sim Y}[|G(F(y))-y|].
 $$
 
+![](./image-20.png)
+
 CycleGAN可以实现很多有意思的应用：比如把马和斑马的照片相互转化、把白天变成黑夜、把梵高的画变成莫奈风格等等。
 
 ## 3. Sequence Modeling
