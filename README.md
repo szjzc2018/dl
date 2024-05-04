@@ -2011,7 +2011,7 @@ $$
 L^{\text{NSCN}}(\theta)=\frac{1}{l}\sum_{i=1}^l\lambda_i E_{\tilde{x}\sim q_{\sigma_i}}\left[\left|\nabla \log q_{\sigma_i}(\tilde{x})-s_{\theta}(\tilde{x};\sigma_i)\right|^2\right]
 $$
 
-其中 $\lambda_i$ 是一个待定参数（注意对于每一个 $\sigma_i$ ，我们相当于有一个单独的score function网络。当然，这也可以理解为**一个大的 $s_\theta$ 网络，其中一个输入就是 $\sigma$ **。这样的网络就叫做Noise Conditional Score Network （**NCSN**））。
+其中 $\lambda_i$ 是一个待定参数（注意对于每一个 $\sigma_i$ ，我们相当于有一个单独的score function网络。当然，这也可以理解为**一个大的 $s_\theta$ 网络，其中一个输入就是 $\sigma$这个数**。这样的网络就叫做Noise Conditional Score Network （**NCSN**））。
 
 那么对于NCSN，我们该采用哪种score matching的近似形式呢？十分明显­——既然我们本身数据集就是从noise中加上来的，我们当然要用Denoising Score Matching。我们来重写前面的loss：
 
@@ -2095,7 +2095,7 @@ $$
 x_i^t=x_i^{t-1}+\frac{k\sigma_i}{2}\epsilon_\theta(x_i^{t-1};\sigma_i)+\sqrt{k}\sigma_iN(0,I)
 $$
 
-我们可以把 $x_i^t-x_i^{t-1}$ 写为 $dx$ ，而右边写为函数乘 $dt$ ，从而使他变成一个**随机微分方程（SDE）**
+我们可以把 $x_i^t-x_i^{t-1}$ 写为 $dx$ ，而右边写为函数乘 $dt$ ，从而使他变成一个**随机微分方程(SDE)**
 
 $$
 dx=-\sigma(t)^2s_\theta(x,t)dt+\sigma(t)dw
