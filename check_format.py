@@ -79,9 +79,18 @@ def format(s:str):
 
             
     return '\n'.join(new_lines)
+
+README = """
+# For Developers
+
+Please edit on **source.md**. After that, you should run `check_format.py` and push. However, Github formula renderer may not work properly, so you should manually change some format in order to let it work (or add an issue for not working formulas). Finally, after you have done all of this, please **replace source.md with the new README contents.**
+"""
+
 if __name__ == '__main__':
     IN = './source.md'#'./test.md'
     OUT = './README.md'#'./test_out.md'
     s = open(IN,'r').read()
     # open('./test_out.md','w').write(preprocess(s))
-    open(OUT,'w').write(format(s.replace('^*','^\*')))
+    f = open(OUT,'w')
+    f.write(README)
+    f.write(format(s.replace('^*','^\*')))
