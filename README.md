@@ -2,6 +2,16 @@
 # For Developers
 
 Please edit on **source.md**. After that, you should run `check_format.py` and push. However, Github formula renderer may not work properly, so you should manually change some format in order to let it work (or add an issue for not working formulas). Finally, after you have done all of this, please **replace source.md with the new README contents.**
+
+## Note on good writing habits (in order our formater to work):
+
+1. Don't put `$$` formulas in environments (e.g. quoting/enumerating)
+2. Make sure that you use `\*` instead of `*` in formulas
+3. Bold or Italic contents shouldn't start or end with formulas (i.e. `$`)
+
+# For Developers
+
+Please edit on **source.md**. After that, you should run `check_format.py` and push. However, Github formula renderer may not work properly, so you should manually change some format in order to let it work (or add an issue for not working formulas). Finally, after you have done all of this, please **replace source.md with the new README contents.**
 # Deep Learning Lecture Notes
 
 ## 0. Introduction
@@ -1752,6 +1762,19 @@ $h_{att}=cat(h^1,h^2,\dots,h^l)$ ,其中 $h^k=\sum_i softmax(Q^k_t\cdot K^k_i)V^
 
 这两个改进就被称为Multi-Headed Q-K-V Attention，也是Transformer的核心。
 
+关于Attention,有一个直观的解释，可以看成它在根据上下文update每个词对应的向量。
+
+举个例子，假如有这么一句话，" a little pink pig"，最开始pig这个词会被embedd到空间中的一个特定向量，可以想象它
+表示general的pig,那么我们希望把"pig"对应的向量"更新"成更加精细的"pink pig"对应的某个向量。我们
+可以想象整个空间中有某种方式把"X"对应到"pink X"，(事实上，在提出word embedding的时候，就有人注意到
+woman - man 约等于 queen - king的情况)。
+
+我们应该怎么更新呢？在这个例子里，我们可以想象每个名词都会生成某个特定方向的Query向量，而每个类似于pink的形容词对应同一个方向的Key向量，同时Value向量是这个形容词本身会对名词产生的影响，那么，pig会对应到"名词"方向的Query向量，与"pink"的Key向量点乘以后产生很大的权重，于是
+"pink"的Value就会和原始pig的embedding放在一起，从而进行更新。那么为什么要多层呢？考虑这个句子"Pink is my favorite color, and a pig of this color is very cute." 这个时候， "color"这个词应该在第一层的时候被更新成pink color,
+从而第二轮pig被更新后的"this color"更新为"pink pig".这也可以somehow解释这个模型具有根据上下文推理的能力，
+想象有一个题目，最后是"the answer is.",那么前面的题目中每个词和概念都会被multi-layer 的KQV attention不断更新，
+最后answer获得了及其丰富的信息，以至于我们可以直接补全答案！
+
 **Architecture Modification**
 
 除了上面的改进以外，Transformer还做了一些架构上的改进，例如在每个attention层后面加上一个全连接层，然后再加上一个残差连接和Layer Normalization，这样可以提高模型的表现力，另外，有一个小问题是当 $d$ 足够大的时候，我们的 $Q\cdot K$ 的量级可能会变大，导致一些梯度消失的问题(因为我们要取softmax! 想象假如两个词的 $Q\cdot K$ 分别是1,2,那么后者的概率应该是前者的 $\frac{1}{e}$ ,这听上去还可以，但是如果变成了100,200,那后者的概率就变成了前者的 $\frac{1}{e^{100}}$ !).
@@ -2011,7 +2034,7 @@ $$
 L^{\text{NSCN}}(\theta)=\frac{1}{l}\sum_{i=1}^l\lambda_i E_{\tilde{x}\sim q_{\sigma_i}}\left[\left|\nabla \log q_{\sigma_i}(\tilde{x})-s_{\theta}(\tilde{x};\sigma_i)\right|^2\right]
 $$
 
-其中 $\lambda_i$ 是一个待定参数（注意对于每一个 $\sigma_i$ ，我们相当于有一个单独的score function网络。当然，这也可以理解为**一个大的 $s_\theta$ 网络，其中一个输入就是 $\sigma$这个数**。这样的网络就叫做Noise Conditional Score Network （**NCSN**））。
+其中 $\lambda_i$ 是一个待定参数（注意对于每一个 $\sigma_i$ ，我们相当于有一个单独的score function网络。当然，这也可以理解为**一个大的 $s_\theta$ 网络，其中一个输入就是 $\sigma$ 这个数**。这样的网络就叫做Noise Conditional Score Network （**NCSN**））。
 
 那么对于NCSN，我们该采用哪种score matching的近似形式呢？十分明显­——既然我们本身数据集就是从noise中加上来的，我们当然要用Denoising Score Matching。我们来重写前面的loss：
 
