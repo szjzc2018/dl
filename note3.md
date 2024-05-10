@@ -1,12 +1,12 @@
-## 3. Sequence Modeling
+# 3. Sequence Modeling
 
-### 3.1 Introduction
+## 3.1 Introduction
 
 在上面的讨论中，我们都默认了 $x$ 是一个已知维度的向量，然而，生活中还有一类数据形式：序列。序列数据是一种非常常见的数据形式，比如文本，音频，视频等等。它的特点是维度未知，例如文本的长度，并不确定。那么我们如何处理这种数据呢？一个简单的办法是卷积，然而卷积的感受野的大小也是固定的，对于输入很长的数据，并不能有效处理。于是，我们需要一些新的网络结构。
 
-### 3.2 Recurrent Neural Network(RNN)
+## 3.2 Recurrent Neural Network(RNN)
 
-#### 3.2.1 Intro
+### 3.2.1 Intro
 
 循环神经网络(Recurrent Neural Network)的思路很简单，我们希望通过一个神经网络不断循环地处理数据，同时保存一个"hidden state"作为这个神经网络的记忆。这样，我们就可以处理任意长度的数据了！具体地，我们有
 
@@ -19,16 +19,16 @@ Y_t=g(h_t)
 $$
 
 其中 $h_t$ 是hidden state, $X_t$ 是输入， $Y_t$ 是输出。RNN的示例图如下：
-![alt text](../assets/image-8.png)
+![alt text](./assets/image-8.png)
 
 我们也可以更简单地化成下面的形式：
-![alt text](../assets/image-9.png)
+![alt text](./assets/image-9.png)
 
-#### 3.2.2 Backpropagation Through Time(BPTT)
+### 3.2.2 Backpropagation Through Time(BPTT)
 
 对于一个RNN，我们如何计算梯度?一般来说，RNN的损失函数是关于输出序列 $Y$ 的函数，设为 $L(Y)$ ,那么我们的目标是求 $\nabla_{\theta}L(Y)$ ,其中 $\theta$ 是所有的参数。所以，我们事实上可以通过链式法则，从后往前累积梯度，这个过程被称为BPTT.
 
-#### 3.2.3 Issues
+### 3.2.3 Issues
 
 上面的想法看上去很美好，但事实上这个结构存在一些严重的问题。我们先考虑一个简单的只有线性层的RNN，那么，它的结构可以表示为:
 
@@ -62,13 +62,13 @@ $$
 
 事实上，我们并没有很好的通用办法解决这些问题，在应用中，我们只能用一个妥协的办法：Gradient Clipping,也就是说，当梯度的大小超过一个阈值的时候，我们把它截断。另外，我们让 $W_1$ 的初始最大特征值为1,这样可以减缓梯度爆炸的问题。但是，当循环次数过多(一般7次左右),末态对初始值梯度消失的问题仍然得不到好的解决，于是，我们需要一些新的结构。这就引出了著名的LSTM.
 
-### 3.3 Long Short-Term Memory(LSTM)
+## 3.3 Long Short-Term Memory(LSTM)
 
-#### 3.3.1 Intro
+### 3.3.1 Intro
 
 LSTM 的想法是这样的，既然很多轮之前的数据因为经过了太多次的activation而消失，我们不如再加上一个cell来记录一个长时记忆，这就是LSTM的思想。
 
-#### 3.3.2 Structure
+### 3.3.2 Structure
 
 具体地，我们有
 
@@ -102,13 +102,13 @@ $c_t$ 的更新通过两个门确定:一个是 $f_t$ ，被称为遗忘门(forge
 
 而 $h_t$ 则是通过一个门控 $o_t$ 来控制输出。这样，我们就可以通过一个cell来控制长时记忆和短时记忆的交互，从而解决了梯度消失的问题。实验上，LSTM 大约能记住100个时间步的信息。
 
-![alt text](../assets/image-10.png)
+![alt text](./assets/image-10.png)
 
-#### 3.3.3 Invariants
+### 3.3.3 Invariants
 
 现实生活中，根据需求的不同，也有许多人在LSTM上进行了一些调整，产生了一些变种。
 
-##### 3.3.3.1 Peephole Connection
+#### 3.3.3.1 Peephole Connection
 
 Peephole Connection的想法是，我们可以让 $f_t,i_t,o_t$ 不仅仅依赖于 $h_{t-1},X_t$ ,还依赖于 $c_{t-1}$ ,这样可以增加一些信息的传递。
 
@@ -142,11 +142,11 @@ $$
 
 这样可以在参数翻倍的代价下，取得更好的效果。
 
-##### 3.3.3.2 Simplified LSTM
+#### 3.3.3.2 Simplified LSTM
 
 Simplified LSTM的想法是，我们可以把 $f_t$ 和 $i_t$ 合并成一个门，这样可以减少参数的数量，同时也可以减少一些计算量, 事实上，如果我们假设它的“记忆量”不变的话，我们可以不用计算 $f_t$ ，而是直接用 $1-i_t$ 代替，这就是Simple LSTM。
 
-##### 3.3.3.3 GRU
+#### 3.3.3.3 GRU
 
 看了前面的小改动之后，有一个更新的想法，我们能不能把 $c$ 和 $h$ 合并到一起？事实证明确实可以，这就是GRU(Gated Recurrent Unit)的想法。它的结构如下：
 
@@ -166,11 +166,11 @@ $$
 h_t=(1-z_t)\circ h_{t-1}+z_t\circ \tilde{h_t}
 $$
 
-![alt text](../assets/image-11.png)
+![alt text](./assets/image-11.png)
 
-### 3.4 Language Model
+## 3.4 Language Model
 
-#### 3.4.1 LSTM Language Model
+### 3.4.1 LSTM Language Model
 
 我们接下来关注一类特殊的模型:Language Model.
 具体地，我们要训练一个模型，给定 $x_1,x_2,...,x_{t-1}$ ,我们希望预测下一个词 $x_t$ 的概率分布
@@ -199,7 +199,7 @@ $$
 
 而对于生成，我们可以通过贪心算法，每次生成概率最大的词，然后把它作为下一个词的输入。
 
-#### 3.4.2 Word Embedding
+### 3.4.2 Word Embedding
 
 事实上，我们可以发现，我们一直处理的都是向量的运算，但是如何把自然语言转化成向量(序列)?这被称为embedding.一个最简单的办法就是用一个 $d$ 维向量表示，其中 $d$ 是所有可能单词的数量，第i个单词用一个one-hot向量(第i维是1,其他全0)表示，但是这种embedding显然有两个问题：1.维度太高 2.没有语义信息。于是，如何获得一个好的embedding就成了一个问题。总的来说，我们希望维度不要太高，并且包含一些语义信息，相似的词在向量空间中也应该比较接近。这就引出了word2vec.
 
@@ -248,9 +248,9 @@ $$
 
 另一种结构是Skip-gram,它的想法是，我们希望通过一个词来预测它的上下文，从而学到一个好的embedding.具体地，我们在训练语料 $x_{-k}x_{-k+1}\dots x_{-1}yx_1 \dots x_{k-1}x_{k}$ 的中的 ${x_i}$ 里随机选择 $R$ 个词作为 $y$ 的上下文 $x$ ,然后把这些 $(x,y)$ 作为正例，然后随机采样 $R$ 个词构成 $\tilde{x}$ ,让 $(\tilde{x},y)$ 作为负例，然后进行一样的训练。
 
-#### 3.4.3 Some Techniques on Language Model
+### 3.4.3 Some Techniques on Language Model
 
-##### 3.4.3.1 Make Training Fast: Noise Contrastive Estimation(NCE)
+#### 3.4.3.1 Make Training Fast: Noise Contrastive Estimation(NCE)
 
 tldr:这一小节讲了一个加速训练的方法:NCE,它的想法和之前类似，把多分类问题转化为二分类问题。本节主要是数学计算，如果不感兴趣，可以跳过，对理解整体内容没有太大影响。
 
@@ -524,21 +524,21 @@ $$
 
 上面这段话来自NCE的[原始论文](#http://proceedings.mlr.press/v9/gutmann10a/gutmann10a.pdf)，其中提到，事实上，基于一些别的损失函数的模型训练中，可以直接采用用模型来估计归一化系数 $Z$ 或者直接使用 $p^0$ (也就是我们的没有归一化的概率，相当于把 $Z$ 当成1)，只是在MLE的时候，会出现明显问题(如果模型估计 $Z$ ,那非常趋近于0导致loss是负无穷,如果 $Z$ 当成1,让 $u$ 很大也是一个道理)。于是只要避免这个明显的问题，我们就可以用同样的方法了！从这里我们也可以看到深度学习理论和实践之间的差距，许多理论并没有特别严格的数学解释保证一定正确，只要解决trivial的问题避免模型简单地cheat,在实际应用中就可能是可行的。
 
-##### 3.4.3.2 Make Inferencing Better: Beam Search
+#### 3.4.3.2 Make Inferencing Better: Beam Search
 
 在模型生成的时候，我们一般是给定上文，然后使用贪心算法，每次找当前概率最大的词 $w_t=\argmax_w{p(w|w_1w_2\dots w_{t-1})}$ ,然而，这样真的能保证最后生成的句子 $w_1w_2\dots w_T$ 是最好的吗？抛开概率大小和好坏的关系不谈，这个甚至不一定是概率最大的！从数学上来说，如果要找到概率最大的句子，我们需要遍历所有可能的句子，这是不现实的。但是，如果使用贪心算法，又容易因为某个词被"带偏",陷入局部最优解。举个具体例子，假如我们现在有某个模型，给定上文"我爱"，它的概率分布是:(苹果，p=0.45),(大象, p=0.1),(大人, p=0.08),(大妈, p=0.12), (大便, p=0.05), (大军, p=0.05),(大米, p=0.08),(大姐, p=0.07).（按照道理来说，应该生成的是条件概率，但是为了方便，我们直接用概率来表示）,那么，如果我们使用贪心算法，第二个字应该会生成"大"(p=0.55),然后最终就生成了"我爱大妈"，可是这个句子的概率并不是最大的！事实上，最大的句子应该是"我爱苹果"！这就是贪心算法的局限性。
 
 为了解决这个问题，我们引入了Beam Search的概念。Beam Search的想法是，我们不仅仅保留一个最优解，而是保留k个最优解，然后每次生成下一个词的时候，我们生成k个可能的词，然后从中选出概率最大的k个，然后继续生成，直到生成了一个终结符或者达到了最大长度。下图就是一个Beam Search的例子，k=2.
 
-![alt text](../assets/image-12.png)
+![alt text](./assets/image-12.png)
 
-##### 3.4.3.3 Make Understanding Accurate: Contextualized Word Embedding
+#### 3.4.3.3 Make Understanding Accurate: Contextualized Word Embedding
 
 在我们之前的例子里，Word Embedding都是固定的，然而，同一个词在不同的上下文里有可能差别很大，例如"I can't bear this" 和 "This is a bear"的bear的encoding理论上来说应该很不一样，可是在我们之前的假定里，他们对应同一个向量。基于这个思想，我们可以先训练正向/反向两个RNN模型，然后把它的隐藏层序列和word本身的embedding拼接在一起，作为这个词的新的embedding，这就是ELMo(Embeddings from Language Models),在这个新的embedding下，我们发现模型的能力有了很大的提升。
 
-### 3.5 Machine Translation: From Seq2Seq to Transformer
+## 3.5 Machine Translation: From Seq2Seq to Transformer
 
-#### 3.5.1 Emerging: Seq2Seq and Attention
+### 3.5.1 Emerging: Seq2Seq and Attention
 
 接下来，我们来讨论一个具体的问题: 机器翻译(Machine Translation),并沿着历史的时间线来看看这个问题是如何一步步推动语言模型的发展，最终达到令人惊叹的结果。
 
@@ -546,11 +546,11 @@ $$
 
 2014年，Nerual Machine Translation的出现，给机器翻译界带来了一场巨变。
 
-![alt text](../assets/image-13.png)
+![alt text](./assets/image-13.png)
 
 在NIPS2014上，Seq2Seq模型被提出，它的想法很简单:使用两个RNN $f_{enc}$ 和 $f_{dec}$ ，分别表示编码器和解码器.编码器读输入的序列，然后把最后一个隐藏层的输出作为解码器的初始隐藏层的输入，然后解码器根据贪心算法(或者beam search)一个一个词地生成输出序列，示意图如下:
 
-![alt text](../assets/image-14.png)
+![alt text](./assets/image-14.png)
 
 通过这个模型，理论上来说它可以记住前面所有的输入保留在隐藏层里，然后根据这个信息生成输出，训练时我们只要采用MLE Training,最大化答案的（对数）概率。所以，这个模型可以有效地解决摘要，对话，翻译的需要，甚至用VAE的思想引入latent variable，还可以拥有Condition Generation的能力 $\dots$ 吗？并不行！
 
@@ -566,13 +566,13 @@ $$
 
 这个定义在直观上可能有点奇怪！为什么 $h_{t-1}^{dec}$ 和 $h_i^{enc}$ 的相似就可以代表它们相关性大呢？这确实不是显然的，但是我们可以认为模型可以学到一个合适的 $h$ 表示让这一点成立，而且这里的小问题也为之后的QKV注意力机制埋下了伏笔，我们将在之后讨论。
 
-![alt text](../assets/image-15.png)
+![alt text](./assets/image-15.png)
 
 注意力机制是语言模型中里程碑式的发现，它极大增加了Seq2Seq模型的能力，同时也让NMT的性能有了质的飞跃，彻底取代了传统的专家系统。同时，注意力机制的实质是关注当前某个特定生成任务对历史输入的依赖性，这个思想不仅可以用于NMT，还可以用于其他生成任务，例如BigGAN等模型中，也引入了这一机制。
 
 在2014到2017年间，应用注意力机制的Seq2Seq模型几乎成了NLP的convention,几乎所有的NLP任务都是基于这一模型上再做微调的结果。直到2017年Google的一篇重磅炸弹论文的推出，彻底打破了已经逐渐平静的NLP界，并接下来在DL，乃至AI领域掀起了一场巨大的风暴。
 
-#### 3.5.2 Enhancing: Transformer
+### 3.5.2 Enhancing: Transformer
 
 接下来，我们来介绍一下这篇论文的结果:Transformer.
 
@@ -646,13 +646,13 @@ woman - man 约等于 queen - king的情况)。
 
 从而，结合上面所有内容，我们就得到了大名鼎鼎的Transformer模型，这是它的结构图：
 
-![alt text](../assets/image-16.png)
+![alt text](./assets/image-16.png)
 
-#### 3.5.3 Blooming: Applications, Pretrained Transformer, and LLM
+### 3.5.3 Blooming: Applications, Pretrained Transformer, and LLM
 
 Transformer刷新了当前NLP领域的几乎所有state-of-the-art,并迅速在NLP领域占据了统治地位。同时，transformer原架构的一些问题也在被不断改进，例如注意力矩阵的 $d^2$ 大小所带来的计算复杂性问题可以利用其稀疏性进行优化等。
 
-同时，除了NLP领域，甚至图片处理领域也在被transformer占据，ViT(Vision Transformer)是google的一项工作，其思想就是把图片拆成16 $\times$ 16的patch，然后把每个patch当成一个word来处理，这篇名叫An(../assets/image is Worth 16x16 Words的论文也在CV领域引起了巨大的反响，刷新了CV领域的几乎所有state-of-the-art. CVPR2021的最佳论文Swin Transformer也是在这之上，通过分层的方法强化了不同patch之间相邻关系，取得了更好的效果。
+同时，除了NLP领域，甚至图片处理领域也在被transformer占据，ViT(Vision Transformer)是google的一项工作，其思想就是把图片拆成16 $\times$ 16的patch，然后把每个patch当成一个word来处理，这篇名叫An(./assets/image is Worth 16x16 Words的论文也在CV领域引起了巨大的反响，刷新了CV领域的几乎所有state-of-the-art. CVPR2021的最佳论文Swin Transformer也是在这之上，通过分层的方法强化了不同patch之间相邻关系，取得了更好的效果。
 
 接下来，我们将介绍另一个非常重要的，甚至改变了人类生活的应用: Pretrained Transformer.
 

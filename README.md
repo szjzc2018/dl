@@ -12,7 +12,11 @@ Please edit on **src/source\*.md**. After that, you should run `check_format.py`
 # The notes are linked below:
 
 [note0.md](./note0.md)
+
 [note1.md](./note1.md)
+
 [note2.md](./note2.md)
+
 [note3.md](./note3.md)
+
 [note4.md](./note4.md)

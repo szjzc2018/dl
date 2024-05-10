@@ -1,6 +1,6 @@
-## 4. Modern Generative Models
+# 4. Modern Generative Models
 
-### 4.1 Diffusion Models
+## 4.1 Diffusion Models
 
 **Diffusion Models**是近年来的一个重大研究成果。它在实践中有着极强的表现。究竟什么是Diffusion Model呢？
 
@@ -12,7 +12,7 @@ $$
 
 而当我们采样的时候，我们从各向同性的高斯分布出发，反向去除噪声得到原始图片。更加具体的，我们先不加证明给出训练和采样的过程：
 
-![](../assets/image-21.png)
+![](./assets/image-21.png)
 
 
 其中注意： $\epsilon_\theta(\cdot,t)$ 是我们的模型，其第二个参数只能是离散的时间 $t=1,2,\cdots,T$ 。注意不要把 $\epsilon_\theta$ 和 $\epsilon$ 搞混。此外， $T\sim 10^3$ , $\alpha_t\sim [1-10^{-2},1-10^{-4}]$ ， $\sigma_t$ 都是可调整的超参数，而
@@ -23,9 +23,9 @@ $$
 
 上面的训练和采样过程来自著名的**DDPM**（Denoising Diffusion Probabilistic Models） paper。如果你之前完全没有了解过Diffusion Model，你一定会大声喊出：这为什么会work？就让我们来从背后的道理出发。
 
-#### 4.1.1 Score-Based Model
+### 4.1.1 Score-Based Model
 
-##### 4.1.1.1 Basic Ideas
+#### 4.1.1.1 Basic Ideas
 我们如何表示一个分布？在物理学中，是一个标量，可以理解为某种“势”；而每一个“势”一定和一个“场”相互对应。这使得人们想到定义**score function**，它就是对应的场：
 
 $$
@@ -67,7 +67,7 @@ $$
 
 这样的操作叫做**score matching**。我们当然希望把 $s_\theta$ 设置成一个neural network，但是问题在于后面的trace Jacobian：这样的一个计算至少需要 $O(d)$ 次反向传播，其中是数据的维度！这导致score matching并不scalable。我们需要设法解决这个问题。
 
-##### 4.1.1.2 Effective Training
+#### 4.1.1.2 Effective Training
 我们发现直接的score matching计算消耗非常大，进而需要找到一些解决方案。第一个方案就是**denoising score matching**。这个方法超级神奇，请看好：
 
 之前我们说
@@ -143,7 +143,7 @@ $$
 
 对于这两种方法的对比，实验上发现，Sliced Score Matching虽然比Denoising Score Matching消耗的时间略长，但是精确度和稳定程度都显著高于Denoising Score Matching。
 
-##### 4.1.1.3 Sampling
+#### 4.1.1.3 Sampling
 根据我们前面介绍的score matching方法，我们已经可以完成score-based model的训练了。那么有了score function（也就是每个点处的梯度信息）后，我们应该如何生成sample呢？我们自然想到**Langevin dynamics**，它需要的梯度信息恰好是我们有的：
 
 $$
@@ -179,11 +179,11 @@ $$
 
 我们发现 $\alpha$ 的信息完全丢失了，也就是说Langevin Dynamics 完全无法体现不同mode之间的权重关系。当然，实际情况也没有绝对disjoint的分布，因此实际的问题体现在Langevin Dynamics要想得到一个准确体现各个mode相对大小的结果，还需要非常长时间的mixing。
 
-![](../assets/image-22.png)
+![](./assets/image-22.png)
 
 看起来，我们的 Score-based Model在好不容易克服重重困难完成training后，在sampling又遇到了很多难以解决的问题。我们马上来介绍一个极其重要的引入，它立刻瓦解了这三个挑战。
 
-##### 4.1.1.4 Add Gaussian to Data
+#### 4.1.1.4 Add Gaussian to Data
 
 如何解决问题？我们给数据**加高斯噪声**！这样我们可以解决……
 
@@ -291,11 +291,11 @@ $$
 
 并取 $\sigma_1$ （最大的方差）基本是两个数据点之间的距离（这样可以使得数据点之间相互沟通），而 $\sigma_l$ 要足够小（比如，人眼分辨不出的噪声）。
 
-#### 4.1.2 Advanced Diffusion Models
+### 4.1.2 Advanced Diffusion Models
 
 通过前面的介绍，我们终于理解了Diffusion Model的基本原理和训练方法。但是，实际上，Diffusion Model还有很多进阶的方法和应用。
 
-##### 4.1.2.1 From Finite to Infinite
+#### 4.1.2.1 From Finite to Infinite
 
 我们回顾NCSN的sampling过程，它引入了一系列 $\sigma_i$ ，并对于每一个值做Langevin Dynamics若干次。我们很自然发现可以把它变为一个**连续的过程**：从递推关系
 
@@ -319,7 +319,7 @@ $$
 
 写成连续过程的最重要好处在于更方便的sampling。Sampling的过程被写为一个SDE，因此我们可以直接调包来求解。但是SDE求解包的精确度并不高，因此我们还需要时不时地用Langevin Dynamics进行一个correction。这样，我们就有了所谓的**Predictor-Corrector Sampling**：数值SDE求解工具包作为predictor，带我们跳一大步，节约很多sampling的计算；然后每隔一段时间使用Langevin Dynamics更新若干轮，以保证数据准确。实验上，这样的方法果然有着很好的效果。
 
-![](../assets/image-23.png)
+![](./assets/image-23.png)
 
 人们还可以再进一步——SDE solver仍然需要做一定的计算，我们能不能把这个时间也省略了？事实上是可以的：反正微分方程的解具有确定性质，我们总是可以从给出。因此，不如交给Neural Network来做！这个方法被称为**Consistency Models**，我们学习一个
 
@@ -329,7 +329,7 @@ $$
 
 来帮助我们更高效地sample。实际训练的方式是确保consistency： $f_\theta$ 总是把一个微分方程轨迹上的点映射到它所在的轨迹上另外一个点。
 
-##### 4.1.2.2 Extensions and Applications
+#### 4.1.2.2 Extensions and Applications
 
 一个重要的拓展是Controllable Generation。这里Diffusion Model的巧妙之处在于，**不需要额外训练就可以做Conditioned Generation**！具体地，我们的sampling过程相当于是
 
@@ -349,14 +349,14 @@ $$
 
 但是如果我们有一个diffusion model但不合心意（比如MNIST上面训练好的模型要被投入用来生成CIFAR的图片），该怎么办呢？研究发现，我们也并不需要完全从头开始训练：我们可以使用称为**LORA**（Low-rank Adaptation of Large Language Models）的方法。直观上来说，我们认为神经网络的参数本身虽然很多，但是实际上处于一个较低维的空间里。因此，我们可以如图所示地训练两个net $A$ 和 $B$ ，其参数量都较小，但是也可也实现整个模型的适应。
 
-![](../assets/image-24.png)
+![](./assets/image-24.png)
 
 另外一个应用是所谓**ControlNet**：比如给定一个可以生成图片的Diffusion Model，我们通过一定的训练使得它可以condition on 一些其他信息，比如文字或者动作。对于这样复杂的任务，我们就不能再“空手套白狼”了，而是应该训练一个和原先模型一样的copy，再加入一些用来decode和encode额外信息的层（图中的zero convolution只是在一个情况中的示例）。这样我们可以保证trainable copy在原有的基础上做出一些改动，使得最后符合 $c$ 的要求。
 
-![](../assets/image-25.png)
+![](./assets/image-25.png)
 
-### 4.2 Structures in Deep Learning
-#### 4.2.1 Structured Priors in Generative Models
+## 4.2 Structures in Deep Learning
+### 4.2.1 Structured Priors in Generative Models
 
 我们之前的很多基于latent variable的generative models都是从一个来自均匀高斯分布的latent variable $z$ 中采样来生成图片的。当时我们提出，这样的采样方式并没有太大的问题，因为本身latent variable代表什么就是[由我们的模型定义的](#2133-choose-of-and).但实际上Gaussian（或者说任何连续的分布）都会带来一定的问题：
 - Mode Collapse：因为 $z$ 本身是uni-modal的，因此我们的模型也会倾向于生成uni-modal的图片；
@@ -383,7 +383,7 @@ $$
 
 第二项总归是好说的，但第一项现在就**不能用之前的reparameterization trick了**：我们必须遍历离散分布中所有可能的 $z$ 。这并不实际可行——它的计算量随着 $K$ 的增大呈指数级增长。我们需要一些新的方法。
 
-##### 4.2.1.1 Gumbel-Softmax VAE
+#### 4.2.1.1 Gumbel-Softmax VAE
 我们来介绍一个极其逆天的trick。先别管我们在干什么，请看下去……
 
 定义一个全新的分布——**Gumbel distribution**，它的PDF是
@@ -457,7 +457,7 @@ $$
 
 可以看出，Gumbel-Softmax VAE解决了之前我们Loss对 $K$ 指数级别依赖性的问题。但它依然不是特别优秀——有一个costly的softmax operator（对 $K$ 个数计算softmax），这使得它仍然只能把 $K$ 扩展到100左右，只是普通VAE的水准。对于更大、更为modern的模型， $K$ 一般要是几千，这样的方法依然吃不消。
 
-##### 4.2.1.2 VQ-VAE (Vector Quantized VAE)
+#### 4.2.1.2 VQ-VAE (Vector Quantized VAE)
 
 同是2017年提出的VQ-VAE认为我们应该改变思路：如果一个固定的 $x$ 直接给出固定的 $z$ ，就**根本不需要计算期望**了！这一模型提出，我们可以用nearest neighbor刻画最后选出的 $z$ ：创造一个dictionary $E$ ，包含 $K$ 个向量 $e_1,\cdots,e_K$ 。对每一个 $x$ ，我们根据一个neural net计算一个向量 $\mathbf{g}(x;\phi)$ ，然后计算
 
