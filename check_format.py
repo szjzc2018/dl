@@ -108,7 +108,7 @@ if __name__ == '__main__':
         OUT = f'./{name}'#'./test_out.md'
         s = open(IN,'r').read()
         f = open(OUT,'w')
-        f.write(format(s.replace('^*','^{\star}').replace('^\*','^{\star}')))
+        f.write(format(s.replace('^*','^{\star}').replace('^\*','^{\star}').replace('../assets','.')))
     file_lists = [f'[{c}](./{c})' for c in file_lists]
     file_lists = sorted(file_lists)
     with open('./README.md','a') as f:

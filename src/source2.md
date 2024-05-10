@@ -1,6 +1,6 @@
-## 2. Generative Models
+# 2. Generative Models
 
-### 2.0 Introduction
+## 2.0 Introduction
 
 还记得我们在Introduction里下的并不严谨的定义吗？
 
@@ -8,7 +8,7 @@
 
 首先的一个问题就是， $y$ 很少但 $x$ 很多，而我们希望的肯定不是对于每个 $y$ 都输出固定的图片,所以我们想要的 $NN$ 并不是一个数学上的映射！那它究竟是什么呢？由于我们想对 $y$ 输出不同的 $x$ ，于是我们容易想到两种方法：一种是 $NN$ 本身就是一个随机函数，对于固定的 $y$ ,有可能输出很多种不同的 $x$ ; 另一种则是给 $NN$ 增加一个随机参数 $z$ , 使得 $NN(y,z)$ 是一个映射，并且希望 $f(NN(y,z)) = y$ . 对于前者，我们介绍Energy-based Model,对于后者，我们介绍VAE，flow model和GAN. 事实上，我们在训练模型的时候发现，对于不同的 $z$ 的分量，当我们连续变化的时候，可以注意到 $z$ 的这个分量有时就代表着图片的某个human readable的特征，所以 $z$ 也被称为latent variable.
 
-### 2.1 Loss Function: MLE Training
+## 2.1 Loss Function: MLE Training
 
 那么，我们应该怎么定义一个损失函数？看上去我们还没有想法，因为我们甚至没有定义清楚问题！我们在开头说的不能每种label记住一张图片的问题一定要在我们的损失函数中体现出来，以及如何刻画 $X_0$ 中的图片也是一个问题。我们先从后者切入，既然我们现在已经有了一个概率模型，并且 $P$ 中的图片确定在 $X_0$ 中（我们在接下来讨论中先不考虑标签），那我们不妨优化 $P$ 中图片的概率，然后希望它有好的泛化能力，然而， $\sum_{x\in P}p(x)$
 并不是一个好的优化目标，因为它不仅有之前每种label记住一张图片就可以优化到1的问题，它的量级也非常小（想像整个图片的可能性有多大！），从而几乎难以训练。
@@ -29,11 +29,11 @@ $$
 
 接下来，我们将介绍几种模型架构，并且使用MLE的损失函数来训练。
 
-#### 2.1.1. Energy-based Model
+### 2.1.1. Energy-based Model
 
 既然我们的模型就是一个概率分布 $p(x)$ , 那么最简单粗暴的方法当然就是直接对每个 $x$ 用某个函数来表示他的概率，同样为了让相对大小在正常的量级上方便计算(同时也受物理学方面的一些启发，以及早期的一些network结构的研究)，我们考虑去对于每个 $x$ 定义一个能量函数 $E(x)$ 正比于 $-\log p(x)$ ，这唯一确定了概率分布 $p(x)=\frac{1}{Z}e^{-E(x)}$ ，其中 $Z$ 是归一化因子。
 
-##### 2.1.1.1 Hopfield Network:Intro
+#### 2.1.1.1 Hopfield Network:Intro
 
 一个简单的典型例子是Hopfield Network,它的输出是 $\{-1,1\}^n$ 中的向量，而能量函数被定义为 $E(x)=-\frac{1}{2}x^TWx$ ，其中 $W$ 是一个对称矩阵，也是我们需要训练的参数。
 
@@ -44,7 +44,7 @@ $$
 
 这两个问题对一般的energy-based model并没有通用的解决方案，事实上，这也是energy-based model最大的问题之一。接下来我们针对Hopfield Network, 给出一个解决方案，这个解决方案也可以适用到一类比较好的 $E(x)$ 的energy-based model上。
 
-##### 2.1.1.2 Hopfield Network: Solving the problem
+#### 2.1.1.2 Hopfield Network: Solving the problem
 
 我们先写一下一般的energy-based model的损失函数：
 
@@ -92,15 +92,15 @@ $$
 
 接下来，我们将介绍一系列sampling的方法，用来解决sampling的问题。形式化地，我们现在有一个很大的集合 $X$ ,以及一个 $X$ 上的概率分布 $D$ ,但是我们可以计算的只是对于单个的 $x$ 所对应的未归一化的概率 $p(x)$ ,我们希望从 $D$ 中采样,或者计算某些函数在 $D$ 上的期望。
 
-##### 2.1.1.3 Sampling Methods
+#### 2.1.1.3 Sampling Methods
 
-###### 2.1.1.3.1 Gibbs Sampling
+##### 2.1.1.3.1 Gibbs Sampling
 
 Gibbs Sampling是一种常见的采样方法，它的基本思想是，我们先随机取一个 $x=(x_1,\dots,x_n)$ ,然后以概率 $(x_i|x_1,\dots,x_{i-1},x_{i+1},\dots,x_n)$ 更新 $x_i$ 的值，重复直到收敛（in pratice, 可能会出现在某个小范围震荡不收敛的情况，这个时候我们近似认为这个小区域内每个都差不多，于是实际的过程就是重复更新足够多次然后取一个）。
 
 这在给定(n-1)个分量后， $p(x_1,x_2,\dots,x_{i-1},x_{i+1},\dots,x_n)$ 的条件概率是一个简单的分布的时候是非常有效的，例如在Hopfield Network中，条件分布事实上就是一个两点分布(别忘了我们的定义 $x_i\in\{-1,1\}$ ),然而，对于一般的条件概率不好算的连续分布，我们还需要更多的方法来计算。
 
-###### 2.1.1.3.2 Importance Sampling
+##### 2.1.1.3.2 Importance Sampling
 
 Importance Sampling 用来解决计算在某个分布下估计函数期望的问题，具体地，如果我们要估计 $E_{x \sim p}f(x)$ , 但从 $p$
 中采样及其困难，因为我们只有未归一化的概率而没有归一化系数。那么，我们可以找一个简单，好采样的分布 $q$ , 然后估计 $E_{x \sim q}f(x)\frac{p(x)}{q(x)}$ ，这两个期望在数学上是相等的，然而通过“换元”我们得到了一个更好采样的分布。
@@ -113,7 +113,7 @@ Importance Sampling 用来解决计算在某个分布下估计函数期望的问
 
 从这个例子里可以看出，因为我们最理想的情况其实是均匀随机取出一个水果采样，所以最优策略是要让每个小箱子里水果数都一样，也就是 $p$ 和 $q$ 尽可能接近。从数学上可以证明，当它们正比时，估计值的方差最小。
 
-###### 2.1.1.3.3 Metropolis-Hastings Algorithm
+##### 2.1.1.3.3 Metropolis-Hastings Algorithm
 
 Metropolis-Hastings Algorithm 是Gibbs Sampling 的推广。想象我们在Gibbs Sampling的时候，相当于构造了一个随机过程，然后希望这个随机过程最终收敛到我们的概率分布。那么，我们是否可以构造一个更一般的随机过程，使得它最终收敛到我们的概率分布呢？这就是Metropolis-Hastings Algorithm的思想。
 
@@ -125,7 +125,7 @@ $$
 
 最终，我们的随机过程定义为：对当前的 $x$ ,在 $q(x'|x)$ 下采样一个 $x'$ ,然后以概率 $A(x\rightarrow x')$ 接受 $x'$ ,否则保持 $x$ ，重复这个过程直到收敛。可以证明，在 $p$ 满足一些连续性条件的情况下，这个随机过程的稳定分布是我们的概率分布。
 
-##### 2.1.1.4 Boltzmann Machine
+#### 2.1.1.4 Boltzmann Machine
 
 现在我们有了采样方法，终于可以来训练基于Hopfield Network的Boltzmann Machine了！ 具体的训练过程如下
 
@@ -151,17 +151,17 @@ $$
 
 ![alt text](../assets/image-1.png)
 
-#### 2.1.2 Normalizing Flow
+### 2.1.2 Normalizing Flow
 
-##### 2.1.2.1 Intro
+#### 2.1.2.1 Intro
 
 Energy-based model非常灵活，并且理论上来说每个概率分布都可以对应一个energy-based model，所以事实上所有模型都可以理解成energy-based model. 但是最大的缺点就是实在太麻烦了！即使在使用很多优化的情况下，还是非常麻烦，因为始终避免不了取样！那么能不能简单一点呢？首先是随机性问题，那我们就直接开始给定一个随机的变量 $z$ ,然后训练一个确定的网络从 $z$ 生成 $x$ ,那 $x$ 不也有随机性了吗？这样的 $z$ 被称为隐变量(latent variable)，因为在实验中，人们发现它的一些维度恰好代表了某些human readable的特征，比如颜色，大小等等。这样一来，我们的生成就不需要从整个概率分布里采样（我们也不知道整个概率分布的密度函数），而是直接随机采样一个 $z$ ,然后生成 $x$ 就行了！
 
-##### 2.1.2.2 Structure
+#### 2.1.2.2 Structure
 
 为了生成 $x$ , 我们采用一系列变换层 $f_1$ , $f_2$ ,..., $f_k$ ,最终 $x=f_k\circ f_{k-1}\circ \dots \circ f_1(z)$ 。于是，采样的复杂问题直接解决了，但训练的时候仍然有一些问题。微积分的知识告诉我们，如果 $f_i$ 都是可逆函数的话，那么 $p(x)$ 就是 $p(z)$ 再乘上 $f_i$ 的雅可比行列式的乘积，这里 $z=NN^{-1}(x)$ 但Jacobi行列式需要 $O(d^3)$ 的复杂度!(其中 $d$ 是向量的维度)这么大的计算量是不可接受的。所以，flow model 最重要的目标就在于找到Jacobi行列式好算的，同时表现力又比较强的函数 $f$ .
 
-##### 2.1.2.3 Planar Flow
+#### 2.1.2.3 Planar Flow
 
 Planar Flow 的想法来源于数学上的Matrix Determinant Lemma:
 
@@ -190,7 +190,7 @@ $$
 
 从而我们可以在 $O(d)$ 的时间里计算出Jacobi行列式！
 
-##### 2.1.2.4 RealNVP
+#### 2.1.2.4 RealNVP
 
 planar flow的想法固然高级，可是函数似乎只是对着lemma凑出来的，为了让Jacobi行列式计算简单，真的要这么复杂吗？事实上并不用！我们发现有一类行列式计算非常简单：三角矩阵的行列式！而Jacobi矩阵是三角矩阵的条件其实就是 $f(x)$ 的第 $i$ 个分量只依赖于 $x_1,x_2,\dots,x_i$ ,但这个限制实际上并不会很强！并且我们可以在不同的 $f$ 之间对 $x$ 进行重排，这样大大增加了模型的表达能力。由此，便引出了RealNVP的结构：
 
@@ -214,7 +214,7 @@ $$
 同时，通过对 $z$ 的插值，先取定四个值 $z^0,z^1,z^2,z^3$ ，然后让 $z=cos \alpha (cos \beta z^0 + sin \beta z^1)+ sin \alpha (cos \beta z^2 + sin \beta z^3)$ ,可以观察到图片的特征连续变化的过程。
 ![alt text](../assets/image-3.png)
 
-##### 2.1.2.6 Autoregressive Flow
+#### 2.1.2.6 Autoregressive Flow
 
 在说Autogegressive flow之前，我们先说一下Autoregressive(自回归)的概念，它是一个数学上的概念，表示用 $x_1,x_2,...x_{i-1}$ 来预测 $x_i$ (和之前的区别是用自己预测自己！之前是 $z_1,z_2,...,z_{i}$ 获得 $x_i$ ).也就是说，我们是不是可以 $f(x)$ 的第 $i$ 个分量不仅仅依赖于 $z$ ,而是也依赖于前面的分量？
 
@@ -253,7 +253,7 @@ $$
 
 ![alt text](../assets/image-6.png)
 
-##### 2.1.2.7 AF v.s. IAF
+#### 2.1.2.7 AF v.s. IAF
 
 回到上面关于AF的讨论，我们发现，当 $x\to z$ 的时候，所有的 $\alpha,\mu$ 可以并行计算，从而训练的速度很快，然而在从 $z$ 生成 $x$ 的时候因为有相关性，无法并行计算，只能一个一个元素计算，导致生成的速度会比较慢。
 
@@ -272,13 +272,13 @@ $$
 - 训练一个IAF 模型，称为student,损失函数定义为和AF 模型输出的差距(KL divergence)，而 $x \to z$ 的部分让teacher帮他算，从而加速
 - 最后使用这个IAF模型，从而可以快速生成
 
-#### 2.1.3 Variational Autoencoder
+### 2.1.3 Variational Autoencoder
 
-##### 2.1.3.1 Intro
+#### 2.1.3.1 Intro
 
 在flow model里，我们相当于定义了 $z$ 到生成的图片的一个映射，而可否简单一点，直接定义 $p(x|z)$ ?这就是VAE的思想。在这之前，我们先来generally计算一下MLE损失。
 
-##### 2.1.3.2 Design the structure
+#### 2.1.3.2 Design the structure
 
 我们仍然采取和之前一样的的MLE估计，此时，
 
@@ -337,7 +337,7 @@ $$
 
 第一种表示说明它在生成模型的训练和proposal的训练中都起到了evaluation的作用，所以可以作为统一的损失函数，而第二种表示则给出了直观的意义，同时变为了方便采样计算的结构。
 
-##### 2.1.3.3 choose of $q$ and $p$
+#### 2.1.3.3 choose of $q$ and $p$
 
 为了计算方便，我们取
 
@@ -355,7 +355,7 @@ $$
 
 其中 $f_{\theta},\mu_{\phi},\sigma_{\phi}$ 都是神经网络。也许你会奇怪，这里的 $p_{\theta}(z)$ 就是标准高斯分布是不是有点太随意了？实际上并不是这样——我们的latent variable究竟代表什么并没有一个明确的规定，而我们怎样定义模型实际上决定了最后我们学到怎样的latent variable。当然，标准高斯分布也带来了模型的一定限制，我们在后面会提到，但现在就让我们接受这个方法（实际上，它也非常地有效）。
 
-##### 2.1.3.4 Training
+#### 2.1.3.4 Training
 
 回到 $ELBO$ 的可采样形式
 
@@ -382,17 +382,17 @@ $$
   - 3.1 从 $p$ 中采样 $z$
   - 3.2 从 $p_{\theta}(x|z)$ 中采样 $x$
 
-##### 2.1.3.5 Others
+#### 2.1.3.5 Others
 
-###### 2.1.3.5.1 impainting
+##### 2.1.3.5.1 impainting
 
 为了图片补全，我们需要 $x\to z$ 的过程尽量robust, 这样我们就可以用需要补全的图片生成 $z$ ，然后用 $p_{\theta}(x|z)$ 生成图片。此时，我们可以在训练过程中随机mask掉一些neurons，从而让模型学会robust的特征。
 
-###### 2.1.3.5.2 $\beta$ -VAE
+##### 2.1.3.5.2 $\beta$ -VAE
 
 就是在上面已经说明的，通过在KL散度前面加一个系数 $\beta$ ，从而可以调整reconstruction loss和KL散度的权重，从而可以调整模型的表现。
 
-###### 2.1.3.5.3 Conditioned VAE
+##### 2.1.3.5.3 Conditioned VAE
 
 当数据有标签的时候应该如何处理？
 此时， $p$ 变为 $p_{\theta}(x|y,z)$ ,
@@ -402,9 +402,9 @@ $q$ 变为 $q_{\phi}(y,z|x)$
 
 对无标签的数据，我们让KL penalty 变成 $KL(q(z)||p(z))+KL(q(y)||p(y))$ , 对于 $p(y)$ 我们可以取一个uniform distribution. 而 reconstruction loss 则变成 $E_{z,y\sim q(z,y)}[\log p(x|z,y)]$ 但此时 $y$ 会变得难以sample从而不好计算梯度，当种类比较少的时候可以通过每一类枚举来计算，而种类比较多的时候我们将要使用一些特别的办法来处理.(~~我也不会~~)
 
-### 2.2 Generative Adversarial Network (GAN)
+## 2.2 Generative Adversarial Network (GAN)
 
-#### 2.2.1 Intro
+### 2.2.1 Intro
 
 至此，我们介绍了这么多生成模型，而每一种都需要做一些优化和限制，使得计算方便，而这一切痛苦的根源就在于我们在开始提出的似乎很完美的损失函数MLE.但我们有没有别的选择？回到我们原来的问题：
 
@@ -428,7 +428,7 @@ GAN的训练过程也很容易，只需要按照上面objective的定义进行�
 
 看起来这已经结束了，实际上2014年GAN的Paper也得到了很好的成果。但我们并不满足于此，转而探讨更深的知识内容。
 
-#### 2.2.2 Math Of GAN
+### 2.2.2 Math Of GAN
 
 我们首先考虑数学上，这个objective的真正含义。首先，容易看出 $D$ 的最佳行为：对于一个 $x$ ，他对loss的贡献是
 
@@ -467,8 +467,8 @@ $$
 但是：
 > There is no free lunch! 
 
-#### 2.2.3 Issues
-##### 2.2.3.1 How to evaluate my GAN?
+### 2.2.3 Issues
+#### 2.2.3.1 How to evaluate my GAN?
 当我们失去了 $p(x)$ ，减少头疼的采样的同时也让我们失去了评估这个Generative Model的手段。那么我们如何**评估**一个GAN呢？这是一个非常困难的问题，我们来介绍一些前人的尝试。
 
 一个想法是训练一个classifier $f(y|x)$ 。对于一张真的图片，我们会期待它在各个class上面的概率分布几乎是one-hot的，因此我们希望GAN生成的图片也是这样的；而我们还希望GAN能够生成各种类别的图片，也就是说
@@ -501,13 +501,13 @@ $$
 
 这个指标（越低越好）有效地估计了Generator生成图片和数据集中图片分布的相似性。实验上发现这一评分标准和人的主观评价有很好的相关性——如果给图片模糊或加噪声，那么Inception Score不怎么敏感，但是FID会很快上升。
 
-##### 2.2.3.2 Why my GAN keeps outputing identical(../assets/images??
+#### 2.2.3.2 Why my GAN keeps outputing identical(../assets/images??
 
 GAN的一个巨大问题就是Mode Collapse。有时候，GAN会只生成一张图片；此外，有时候它还可能随着训练过程在各个图片打转。这个问题的根源在于GAN的loss function。回顾之前我们指出，GAN的数学本质是优化 $p_G$ 和 $p_{\text{data}}$ 之间的JSD。还记得之前介绍inclusive KL和exclusive KL的时候我们讲到过，inclusive KL可以涵盖很多的mode，而exclusive只是会简单地靠近概率最大的mode。这里不幸的是，**JSD本身类似exclusive KL**，因此我们的GAN也只能学会几个少数的pattern。更加不幸的是
 
 > There is no fundamental solution for mode collapsing in GAN.
 
-##### 2.2.3.3 Why is my GAN training so instable???
+#### 2.2.3.3 Why is my GAN training so instable???
 
 ![](../assets/image-17.png)
 
@@ -523,9 +523,9 @@ $x$ 希望 $J$ 最大， $y$ 希望 $J$ 最小。一个Nash Equilibrium是 $x=y=
 
 不仅如此，GAN还饱受梯度消失的折磨。直观上看，Generator 从一个 $\sim 100$ 维的hidden state生成一个 $28\times 28$ 维度以上的图片，而Discriminator只需要在 $28\times 28$ 的高维空间用一刀切开真假图片。这听起来就不公平，的确也是如此：discriminator 很容易就很快达到百分百准确率，此时generator的梯度就很快会消失。
 
-#### 2.2.4 Let's make GAN work!
+### 2.2.4 Let's make GAN work!
 
-##### 2.2.4.1 DCGAN (Deep Convolutional GAN)
+#### 2.2.4.1 DCGAN (Deep Convolutional GAN)
 第一个伟大的尝试是DCGAN。在这个结构里，我们只用convolutional layer，**不加任何pooling**，除了改变大小用的projection layer也**不加任何MLP layer**。特别地，我们不能用那些supervised learning中强大的结构作为Discriminator。
 
 此外，它指出应当使用**Batch Normalization**。但是，在Generator的最后一层和Discriminator的第一层不能加入Batch Normalization，这样Generator才能学会图片像素的绝对大小，而非相对大小。它还指出一个batch 必须要么全是真的要么全是假的，这样才能保证Batch Normalization的效果。
@@ -543,7 +543,7 @@ G(z_3)=\text{woman without glasses}\\
 \Longrightarrow G(z_1-z_2+z_3)=\text{woman with glasses}.
 $$
 
-##### 2.2.4.2 Improved Training Techniques for GAN
+#### 2.2.4.2 Improved Training Techniques for GAN
 一系列GAN的训练技巧又诞生了。首先是 **Feature Matching**。为了**避免 Gradient Vanishing**，我们不只是保留最后Discriminator的输出，还要取出经过Discriminator几层卷积之后提取出的feature。随后，我们加上这样一个loss：
 
 $$
@@ -586,13 +586,13 @@ $$
 
 **Virtual Batch Normalization**处理的问题是，前面引入的Batch Norm导致一个batch中的图片之间的关系太强（比如说，实验上看到它们都是一个色调）。解决的办法是，我们引入一个虚拟的batch，然后用这个虚拟的batch来给出统计数据计算Batch Norm。这样，我们就可以避免同一个batch中图片的依赖性。当然具体实践中采用的写法也和这里简单的介绍并不完全相同。
 
-##### 2.2.4.3 And more techniques...
+#### 2.2.4.3 And more techniques...
 GAN的训练技巧还有很多，大部分都可以在网上搜索找到。但是注意具体情况具体分析——很多别人认为至关重要的技巧很可能在你的超参选取或者模型结构的基础上几乎没有任何效果。不过无论如何……
 > "Keep calm and train a GAN"
 
-#### 2.2.5 WGAN: How about improving GAN from its root?
+### 2.2.5 WGAN: How about improving GAN from its root?
 
-##### 2.2.5.1 Changing the loss
+#### 2.2.5.1 Changing the loss
 
 我们还记得之前指出，GAN的训练等价于优化JSD。但是JSD本身具有许多问题。比如说之前提到的mode collapse。不仅如此，它还会造成Gradient Vanishing。我们可以发现，如果 $p_{\text{data}}$ 和 $p_G$ disjoint，那么
 
@@ -644,7 +644,7 @@ $$
 
 WGAN具有很好的训练稳定性，大幅避免了gradient vanishing和mode collapse。同时，不管网络结构选的多么糟糕，WGAN总能最终克服困难（如图）。但是，WGAN的原始论文也指出，weight clipping是一个很粗暴的方法，它会导致一些问题，比如需要很长时间才能使得 $f$ 稳定，或者多层网络导致的梯度消失。WGAN还有一段路要走。
 
-##### 2.2.5.2 Improved Training of WGANs
+#### 2.2.5.2 Improved Training of WGANs
 
 我们前面也看到，WGAN的训练最难的一点是如何限制 $f$ 是1-Lipchitz的。前面粗暴的Weight Clipping方法不能很好地刻画这个要求。这时，有一个很好的想法出现了：我们限制 $f$ 是1-Lipchitz的，那么取到最大值的时候， $f$ 一定梯度基本上处处为1.因此，我们可以**直接限制 $f$ 的梯度模长为1**。这个方法被称为 **Gradient Penalty**。此时，我们就可以定义一个新的目标：
 
@@ -660,11 +660,11 @@ $$
 
 实验上，这个方法十分有效：weight clipping不仅对clipping constant $c$ 十分敏感，而且还会导致weight 集中在 $\pm c$ ；但所这个方法得到的 $f$ 的各个weight则是符合一个非常美观的分布。同时，这个方法对于不同的architecture（尤其是网络特别深的时候）也有很好的效果。当然，其代价也很明显——要计算gradient over gradients，这导致计算量非常大。
 
-#### 2.2.6 GAN Extensions
+### 2.2.6 GAN Extensions
 
 有了前述理论基础和大量的training techniques之后，GAN的发展就变得非常快速。我们在这里简单介绍一些GAN的扩展。
 
-##### 2.2.6.1 GAN for Semi-Supervised Learning
+#### 2.2.6.1 GAN for Semi-Supervised Learning
 
 我们考虑用GAN作semi-supervised learning：假设现在收集了一些data，一部分是labeled $(x,y)$ ，另一部分只有图片，是 $x$ 。如何把GAN提升到可以应用于含有标签的数据呢？我们可以让G和D的任务分别变成
 
@@ -686,7 +686,7 @@ $$
 
 因为Discriminator获得了更多信息，Conditional GAN相比于普通GAN更加强大。
 
-##### 2.2.6.2 Representation Learning and BiGAN
+#### 2.2.6.2 Representation Learning and BiGAN
 我们有一个可以从latent space $z$ 映射到图片 $x$ 的 generator 
 
 $$
@@ -712,7 +712,7 @@ $$
 
 在BiGAN的基础上也有一系列发展，比如BigBiGAN等等。它们除了则增大训练的scale之外，也引入了一些更复杂的技巧。
 
-##### 2.2.6.3 GAN for Style Transfer
+#### 2.2.6.3 GAN for Style Transfer
 
 还记得GAN最开始给出Generator的目标：从一个latent variable $z$ 生成 $x$ 。这时，我们注意到 $z$ 不仅可以是一些简单的随机数——它完全可以是另外一张图片！这样，我们就可以实现**style transfer**：输入一个没有经过加工的原始图片 $z$ ，输出一个经过加工的图片 $x$ 。
 
