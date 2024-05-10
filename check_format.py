@@ -1,4 +1,4 @@
-import re
+import re,os
 def preprocess(s:str):
     """remove $$ in one line"""
     lines = s.split('\n')
@@ -91,15 +91,27 @@ Please edit on **src/source\*.md**. After that, you should run `check_format.py`
 2. Make sure that you use `\star` instead of `*` in formulas
 3. Bold or Italic contents shouldn't start or end with formulas (i.e. `$`)
 
-#
+# The notes are linked below:
+
 """
 
 if __name__ == '__main__':
-    for i in range(5):
-        IN = f'./src/source{i}.md'#'./test.md'
-        OUT = f'./note{i}.md'#'./test_out.md'
-        s = open(IN,'r').read()
-        # open('./test_out.md','w').write(preprocess(s))
-        f = open(OUT,'w')
+    with open('./README.md','w') as f:
         f.write(README)
+    SRC = './src'
+    file_lists = []
+    # print(os.listdir(SRC))
+    for file in os.listdir(SRC):
+        IN = os.path.join(SRC,file)#'./test.md'
+        name = file.replace('source','note')
+        file_lists.append(name)
+        OUT = f'./{name}'#'./test_out.md'
+        s = open(IN,'r').read()
+        f = open(OUT,'w')
         f.write(format(s.replace('^*','^{\star}').replace('^\*','^{\star}')))
+    file_lists = [f'[{c}](./{c})' for c in file_lists]
+    file_lists = sorted(file_lists)
+    with open('./README.md','a') as f:
+        f.write('\n'.join(file_lists))
+    # for i in range(5):
+    #    
