@@ -6,12 +6,8 @@ Please edit on **source.md**. After that, you should run `check_format.py` and p
 ## Note on good writing habits (in order our formater to work):
 
 1. Don't put `$$` formulas in environments (e.g. quoting/enumerating)
-2. Make sure that you use `\*` instead of `*` in formulas
+2. Make sure that you use `\star` instead of `*` in formulas
 3. Bold or Italic contents shouldn't start or end with formulas (i.e. `$`)
-
-# For Developers
-
-Please edit on **source.md**. After that, you should run `check_format.py` and push. However, Github formula renderer may not work properly, so you should manually change some format in order to let it work (or add an issue for not working formulas). Finally, after you have done all of this, please **replace source.md with the new README contents.**
 # Deep Learning Lecture Notes
 
 ## 0. Introduction
@@ -748,7 +744,7 @@ $$
 q_{\phi}(z|x)=N(\mu_{\phi}(x),diag(\exp(\sigma_{\phi}(x))))
 $$
 
-其中 $f_{\theta},\mu_{\phi},\sigma_{\phi}$ 都是神经网络。
+其中 $f_{\theta},\mu_{\phi},\sigma_{\phi}$ 都是神经网络。也许你会奇怪，这里的 $p_{\theta}(z)$ 就是标准高斯分布是不是有点太随意了？实际上并不是这样——我们的latent variable究竟代表什么并没有一个明确的规定，而我们怎样定义模型实际上决定了最后我们学到怎样的latent variable。当然，标准高斯分布也带来了模型的一定限制，我们在后面会提到，但现在就让我们接受这个方法（实际上，它也非常地有效）。
 
 ##### 2.1.3.4 Training
 
@@ -834,7 +830,7 @@ $$
 因此，我们可以解出discriminator的最优解 $D(x)^{*}$ ：
 
 $$
-D(x)^\*=\frac{p_{\text{data}}(x)}{p_{\text{data}}(x)+p_G(x)}.
+D(x)^{\star}=\frac{p_{\text{data}}(x)}{p_{\text{data}}(x)+p_G(x)}.
 $$
 
 我们进而可以把这个表达式代入，得到 $G$ 的优化目标：
@@ -1494,14 +1490,14 @@ $$
 
 
 $$
-\tilde{p}^\*(Y,w,h);p_{\theta}^\*(Y,w,h)
+\tilde{p}^{\star}(Y,w,h);p_{\theta}^{\star}(Y,w,h)
 $$
 
 然后，我们的目标变成让这两个三元分布接近，转化成让
 
 
 $$
-\tilde{p}^\*(Y|w,h) \approx p_{\theta}^\*(Y|w,h)
+\tilde{p}^{\star}(Y|w,h) \approx p_{\theta}^{\star}(Y|w,h)
 $$
 
 
@@ -1510,67 +1506,67 @@ $$
  
 
 $$
-L^\*=E_{(Y,w)\sim \tilde{p}^\*(Y,w|h)}\log p_{\theta}^\*(Y|w,h)
+L^{\star}=E_{(Y,w)\sim \tilde{p}^{\star}(Y,w|h)}\log p_{\theta}^{\star}(Y|w,h)
 $$
 
-注意期望是 $\tilde{p}^\*(Y,w|h)$ 采样，而 $\log$ 里是 $p_{\theta}^\*(Y|w,h)$ .这样，我们的问题就变成了**二分类问题**，从而可以快速计算！
+注意期望是 $\tilde{p}^{\star}(Y,w|h)$ 采样，而 $\log$ 里是 $p_{\theta}^{\star}(Y|w,h)$ .这样，我们的问题就变成了**二分类问题**，从而可以快速计算！
 
 这里有两个可能引起误解的点:
 
-- 1. $\tilde{p}^\*$ 是由 $\tilde{p}$ 经过上面的特定方法生成的三元分布，而它并不只是简单地给每个句子加上标签，也就是说它的边缘分布 $\tilde{p}^\*(+,w|h)+\tilde{p}^\*(-,w|h)$ 一般来说并不等于 $\tilde{p}(w|h)$ !
-- 2.我们为什么可以优化这个对象？我们将接下来证明，在某些假定下， $L^\*$ 的梯度和 $L$ 是相等的！所以我们可以把 $\nabla L^\*$ 当成 $\nabla L$ 的近似。
+- 1. $\tilde{p}^{\star}$ 是由 $\tilde{p}$ 经过上面的特定方法生成的三元分布，而它并不只是简单地给每个句子加上标签，也就是说它的边缘分布 $\tilde{p}^{\star}(+,w|h)+\tilde{p}^{\star}(-,w|h)$ 一般来说并不等于 $\tilde{p}(w|h)$ !
+- 2.我们为什么可以优化这个对象？我们将接下来证明，在某些假定下， $L^{\star}$ 的梯度和 $L$ 是相等的！所以我们可以把 $\nabla L^{\star}$ 当成 $\nabla L$ 的近似。
 
-现在，我们来推导 $\nabla L^\*$ 和 $\nabla L$ 的关系.我们首先来计算 $\tilde{p}^\*,p_{\theta}^\*$ 的分布:
-
-
-
-$$
-\tilde{p}^\*(+,w|h)=\tilde{p}^\*(+|h)\tilde{p}^\*(w|+,h) =\frac{1}{k+1} \tilde{p}(w|h)
-$$
+现在，我们来推导 $\nabla L^{\star}$ 和 $\nabla L$ 的关系.我们首先来计算 $\tilde{p}^{\star},p_{\theta}^{\star}$ 的分布:
 
 
 
 $$
-\tilde{p}^\*(-,w|h)=\tilde{p}^\*(-|h)\tilde{p}^\*(w|-,h)=\frac{k}{k+1} q(w)
-$$
-
-
-$$
-\to \tilde{p}^\*(w|h)=\frac{1}{k+1} \tilde{p}(w|h)+\frac{k}{k+1} q(w)
+\tilde{p}^{\star}(+,w|h)=\tilde{p}^{\star}(+|h)\tilde{p}^{\star}(w|+,h) =\frac{1}{k+1} \tilde{p}(w|h)
 $$
 
 
 
 $$
- \tilde{p}^\*(+|w,h)=\frac{\tilde{p}^\*(+,w|h)}{\tilde{p}^\*(w|h)}=\frac{\tilde{p}(w|h)}{kq(w)+\tilde{p}(w|h)}
+\tilde{p}^{\star}(-,w|h)=\tilde{p}^{\star}(-|h)\tilde{p}^{\star}(w|-,h)=\frac{k}{k+1} q(w)
 $$
-
-$$
- \tilde{p}^\*(-|w,h)=\frac{\tilde{p}^\*(-,w|h)}{\tilde{p}^\*(w|h)}=\frac{kq(w)}{kq(w)+\tilde{p}(w|h)}
-$$
-
-类似的，我们可以计算 $p_{\theta}^\*$ 的分布:
-
 
 
 $$
-p_{\theta}^\*(+|w,h)=\frac{p_{\theta}^\*(+,w|h)}{p_{\theta}^\*(w|h)}=\frac{p_{\theta}(w|h)}{kq(w)+p_{\theta}(w|h)}
+\to \tilde{p}^{\star}(w|h)=\frac{1}{k+1} \tilde{p}(w|h)+\frac{k}{k+1} q(w)
+$$
+
+
+
+$$
+ \tilde{p}^{\star}(+|w,h)=\frac{\tilde{p}^{\star}(+,w|h)}{\tilde{p}^{\star}(w|h)}=\frac{\tilde{p}(w|h)}{kq(w)+\tilde{p}(w|h)}
+$$
+
+$$
+ \tilde{p}^{\star}(-|w,h)=\frac{\tilde{p}^{\star}(-,w|h)}{\tilde{p}^{\star}(w|h)}=\frac{kq(w)}{kq(w)+\tilde{p}(w|h)}
+$$
+
+类似的，我们可以计算 $p_{\theta}^{\star}$ 的分布:
+
+
+
+$$
+p_{\theta}^{\star}(+|w,h)=\frac{p_{\theta}^{\star}(+,w|h)}{p_{\theta}^{\star}(w|h)}=\frac{p_{\theta}(w|h)}{kq(w)+p_{\theta}(w|h)}
 $$
 
  
 
 $$
-p_{\theta}^\*(-|w,h)=\frac{p_{\theta}^\*(-,w|h)}{p_{\theta}^\*(w|h)}=\frac{kq(w)}{kq(w)+p_{\theta}(w|h)}
+p_{\theta}^{\star}(-|w,h)=\frac{p_{\theta}^{\star}(-,w|h)}{p_{\theta}^{\star}(w|h)}=\frac{kq(w)}{kq(w)+p_{\theta}(w|h)}
 $$
 
-从而，我们可以计算 $L^\*$ :
+从而，我们可以计算 $L^{\star}$ :
 
 $$
-L^\*=E_{(Y,w)\sim \tilde{p}^\*(Y,w|h)}\log p_{\theta}^\*(Y|w,h)
+L^{\star}=E_{(Y,w)\sim \tilde{p}^{\star}(Y,w|h)}\log p_{\theta}^{\star}(Y|w,h)
 $$
 
 $$
-=\sum_w (\tilde{p}^\*(+,w|h)\log p_{\theta}^\*(+|w,h)+\tilde{p}^\*(-,w|h)\log p_{\theta}^\*(-|w,h))
+=\sum_w (\tilde{p}^{\star}(+,w|h)\log p_{\theta}^{\star}(+|w,h)+\tilde{p}^{\star}(-,w|h)\log p_{\theta}^{\star}(-|w,h))
 $$
 
 $$
@@ -1586,13 +1582,13 @@ $$
 这样，我们可以得到 $p_{\theta}(w|h)\approx u_{\theta}(w,h)$ (还记得这些符号的[定义](#def)吗？)，从而我们可以得到(为了方便起见，我们省略最前面的常数 $\frac{1}{k+1}$ ):
 
 $$
-L^\*=\sum_w(\tilde{p}(w|h)\log \frac{u_{\theta}(w,h)}{kq(w)+u_{\theta}(w,h)}+kq(w)\log \frac{kq(w)}{kq(w)+u_{\theta}(w,h)})
+L^{\star}=\sum_w(\tilde{p}(w|h)\log \frac{u_{\theta}(w,h)}{kq(w)+u_{\theta}(w,h)}+kq(w)\log \frac{kq(w)}{kq(w)+u_{\theta}(w,h)})
 $$
 
-故我们可以来计算 $\nabla L^\*$ (为简单起见，我们在下面的中间过程里用 $q$ 表示 $q(w)$ , $u_{\theta}$ 表示 $u_{\theta}(w,h)$ ):
+故我们可以来计算 $\nabla L^{\star}$ (为简单起见，我们在下面的中间过程里用 $q$ 表示 $q(w)$ , $u_{\theta}$ 表示 $u_{\theta}(w,h)$ ):
 
 $$
-\nabla L^\*=\sum_w \nabla(\tilde{p}(w|h)\log \frac{u_{\theta}}{kq+u_{\theta}}+kq\log \frac{kq}{kq+u_{\theta}})
+\nabla L^{\star}=\sum_w \nabla(\tilde{p}(w|h)\log \frac{u_{\theta}}{kq+u_{\theta}}+kq\log \frac{kq}{kq+u_{\theta}})
 $$
 
 $$
@@ -1631,22 +1627,22 @@ $$
 
 其中最后一步还是用到了 $p_{\theta}(w|h)\approx u_{\theta}(w,h)$ .
 
-从而，我们推出了，当 $k$ 足够大的时候， $\nabla L^\* \approx \nabla L$ ！
+从而，我们推出了，当 $k$ 足够大的时候， $\nabla L^{\star} \approx \nabla L$ ！
 
-(严格地，是 $(k+1)\nabla L^\* \approx \nabla L$ ，别忘了我们之前省略了系数)
+(严格地，是 $(k+1)\nabla L^{\star} \approx \nabla L$ ，别忘了我们之前省略了系数)
 
 读到这里，你可能会有点奇怪，这个方法究竟是怎么绕开原来的softmax问题的？事实上很简单，上面直接把计算量最大的归一化系数当成了1来算！你可能还会说，那既然这样，我们在MLE估计的时候直接把归一化系数当成1不是照样很好算吗，可是我们可以发现，如果这样的话，MLE训练时将会让每个 $u$ 越来越大，导致损失函数到无穷大，从而毫无意义！所以这个方法最大的intuition就是说，通过同时采样正例和负例，从而避免了归一化系数过大或者过小可以cheat的方法，然后把归一化系数假设成1来加速计算！
 
 其实前面你可能就会注意到，优化
 
 $$
-L^\*=E_{(Y,w)\sim \tilde{p}^\*(Y,w|h)}\log p_{\theta}^\*(Y|w,h)
+L^{\star}=E_{(Y,w)\sim \tilde{p}^{\star}(Y,w|h)}\log p_{\theta}^{\star}(Y|w,h)
 $$
 
 根本没让问题变得更好算啊，因为
 
 $$
-p_{\theta}^\*(+|w,h)=\frac{p_{\theta}(w|h)}{kq(w)+p_{\theta}(w|h)}，p_{\theta}^\*(-|w,h)=\frac{kq(w)}{kq(w)+p_{\theta}(w|h)}
+p_{\theta}^{\star}(+|w,h)=\frac{p_{\theta}(w|h)}{kq(w)+p_{\theta}(w|h)}，p_{\theta}^{\star}(-|w,h)=\frac{kq(w)}{kq(w)+p_{\theta}(w|h)}
 $$
 
 里面的 $p_\theta$ 还是要归一化系数！
@@ -1838,9 +1834,9 @@ $$
 
 上面的训练和采样过程来自著名的**DDPM**（Denoising Diffusion Probabilistic Models） paper。如果你之前完全没有了解过Diffusion Model，你一定会大声喊出：这为什么会work？就让我们来从背后的道理出发。
 
-### 4.1.1 Score-Based Model
+#### 4.1.1 Score-Based Model
 
-#### 4.1.1.1 Basic Ideas
+##### 4.1.1.1 Basic Ideas
 我们如何表示一个分布？在物理学中，是一个标量，可以理解为某种“势”；而每一个“势”一定和一个“场”相互对应。这使得人们想到定义**score function**，它就是对应的场：
 
 $$
@@ -1882,7 +1878,7 @@ $$
 
 这样的操作叫做**score matching**。我们当然希望把 $s_\theta$ 设置成一个neural network，但是问题在于后面的trace Jacobian：这样的一个计算至少需要 $O(d)$ 次反向传播，其中是数据的维度！这导致score matching并不scalable。我们需要设法解决这个问题。
 
-#### 4.1.1.2 Effective Training
+##### 4.1.1.2 Effective Training
 我们发现直接的score matching计算消耗非常大，进而需要找到一些解决方案。第一个方案就是**denoising score matching**。这个方法超级神奇，请看好：
 
 之前我们说
@@ -1958,7 +1954,7 @@ $$
 
 对于这两种方法的对比，实验上发现，Sliced Score Matching虽然比Denoising Score Matching消耗的时间略长，但是精确度和稳定程度都显著高于Denoising Score Matching。
 
-#### 4.1.1.3 Sampling
+##### 4.1.1.3 Sampling
 根据我们前面介绍的score matching方法，我们已经可以完成score-based model的训练了。那么有了score function（也就是每个点处的梯度信息）后，我们应该如何生成sample呢？我们自然想到**Langevin dynamics**，它需要的梯度信息恰好是我们有的：
 
 $$
@@ -1998,7 +1994,7 @@ $$
 
 看起来，我们的 Score-based Model在好不容易克服重重困难完成training后，在sampling又遇到了很多难以解决的问题。我们马上来介绍一个极其重要的引入，它立刻瓦解了这三个挑战。
 
-#### 4.1.1.4 Add Gaussian to Data
+##### 4.1.1.4 Add Gaussian to Data
 
 如何解决问题？我们给数据**加高斯噪声**！这样我们可以解决……
 
@@ -2106,11 +2102,11 @@ $$
 
 并取 $\sigma_1$ （最大的方差）基本是两个数据点之间的距离（这样可以使得数据点之间相互沟通），而 $\sigma_l$ 要足够小（比如，人眼分辨不出的噪声）。
 
-### 4.1.2 Advanced Diffusion Models
+#### 4.1.2 Advanced Diffusion Models
 
 通过前面的介绍，我们终于理解了Diffusion Model的基本原理和训练方法。但是，实际上，Diffusion Model还有很多进阶的方法和应用。
 
-#### 4.1.2.1 From Finite to Infinite
+##### 4.1.2.1 From Finite to Infinite
 
 我们回顾NCSN的sampling过程，它引入了一系列 $\sigma_i$ ，并对于每一个值做Langevin Dynamics若干次。我们很自然发现可以把它变为一个**连续的过程**：从递推关系
 
@@ -2144,7 +2140,7 @@ $$
 
 来帮助我们更高效地sample。实际训练的方式是确保consistency： $f_\theta$ 总是把一个微分方程轨迹上的点映射到它所在的轨迹上另外一个点。
 
-#### 4.1.2.2 Extensions and Applications
+##### 4.1.2.2 Extensions and Applications
 
 一个重要的拓展是Controllable Generation。这里Diffusion Model的巧妙之处在于，**不需要额外训练就可以做Conditioned Generation**！具体地，我们的sampling过程相当于是
 
@@ -2169,3 +2165,113 @@ $$
 另外一个应用是所谓**ControlNet**：比如给定一个可以生成图片的Diffusion Model，我们通过一定的训练使得它可以condition on 一些其他信息，比如文字或者动作。对于这样复杂的任务，我们就不能再“空手套白狼”了，而是应该训练一个和原先模型一样的copy，再加入一些用来decode和encode额外信息的层（图中的zero convolution只是在一个情况中的示例）。这样我们可以保证trainable copy在原有的基础上做出一些改动，使得最后符合 $c$ 的要求。
 
 ![](./image-25.png)
+
+### 4.2 Structures in Deep Learning
+#### 4.2.1 Structured Priors in Generative Models
+
+我们之前的很多基于latent variable的generative models都是从一个来自均匀高斯分布的latent variable $z$ 中采样来生成图片的。当时我们提出，这样的采样方式并没有太大的问题，因为本身latent variable代表什么就是[由我们的模型定义的](#2133-choose-of-and).但实际上Gaussian（或者说任何连续的分布）都会带来一定的问题：
+- Mode Collapse：因为 $z$ 本身是uni-modal的，因此我们的模型也会倾向于生成uni-modal的图片；
+- Blurry Samples：考虑到 $z$ 本身是可以以无穷小的精度连续变化的，但 $z$ 的很小的变化一定会带来图片在两个mode之间的渐变，因此我们的模型很可能生成模糊的图片。
+
+一个直接的想法是我们把 $z$ 变成**离散的**。具体地，我们把每一个图片 $x$ 对应的latent variable $z$ 设置为一个序列 $z_1,z_2,\cdots,z_h$ （ $h$ 仍然是之前的hidden size），并且取
+
+$$
+z_i\in \text{Uniform}(0,1,\cdots,K-1).
+$$
+
+这样直接解决了这样两个问题。当然，我们的这个更改对于VAE最为友善：我们完全不需要修改encoder的具体形式，它仍然是 $p(x|z;\theta)$ ；而decoder则可以简单地修改为一个softmax，取
+
+$$
+z_i\sim q_i(z_i|x;\phi)=\text{softmax}(\mathbf{l_i}(x;\phi))
+$$
+
+（这里粗体的 $\mathbf{l_i}$ 表示一个向量，维度为 $K$ .）
+但当我们看到原先的VAE的loss function的时候，就会意识到一个严重的问题：
+
+$$
+J(\theta,\phi)=E_{z\sim q(z|x;\phi)}[\log p(x|z;\theta)]-\text{KL}(q(z|x;\phi)||p(z))
+$$
+
+第二项总归是好说的，但第一项现在就**不能用之前的reparameterization trick了**：我们必须遍历离散分布中所有可能的 $z$ 。这并不实际可行——它的计算量随着 $K$ 的增大呈指数级增长。我们需要一些新的方法。
+
+##### 4.2.1.1 Gumbel-Softmax VAE
+我们来介绍一个极其逆天的trick。先别管我们在干什么，请看下去……
+
+定义一个全新的分布——**Gumbel distribution**，它的PDF是
+
+$$
+f_{\text{Gumbel}}(x)=\frac{1}{\beta}\exp(-z-e^{-z}), z=\frac{x-\mu}{\beta}.
+$$
+
+容易看出它有一个close form CDF：
+
+$$
+F_{\text{Gumbel}}(x)=e^{-e^{-z}}.
+$$
+
+这使得它可以被有效地sample：设 $u\sim \text{Uniform}(0,1)$ ，则
+
+$$
+X=\mu-\beta\log (-\log u)\sim \text{Gumbel}(\mu,\beta).
+$$
+
+好的，但这有什么用处呢？那让我们来看最重要的一个结论：
+
+> **Lemma. (Gumbel Softmax Trick)**
+
+如果 $X_i\sim \text{Gumbel}(\mu_i,1)$ ， $1\le i\le K$ ，则
+
+$$
+\text{argmax} X_i\sim \text{softmax}(\mu_1,\cdots,\mu_K).
+$$
+
+> **Proof.**
+计算 $X_1$ 最大的概率：
+
+$$
+p_1=\int_{-\infty}^\infty e^{-z_1-e^{-z_1}}dz_1\cdot e^{-e^{-(z_1+\mu_1-\mu_2)}}\cdots e^{-e^{-(z_1+\mu_1-\mu_K)}}
+$$
+
+$$
+=\int_0^{\infty}\exp(-t-e^{\mu_2-\mu_1}t-\cdots-e^{\mu_K-\mu_1}t)dt.
+$$
+
+$$
+=\frac{e^{\mu_1}}{e^{\mu_1}+\cdots+e^{\mu_K}}.\qquad \Box
+$$
+
+此时，也许你逐渐知道我们想要干什么了——回顾之前 $z\sim q(x|z;\phi)$ 的高斯分布可以用reparameterization trick写成 $z=\beta(x;\phi)+\sigma(x;\phi)\cdot \epsilon$ 的形式，而刚才我们发现softmax的categorical的分布看起来不能这样做。但现在我们发现**完全可以**这样做：原来的
+
+$$
+z_i\sim \text{softmax}(\mathbf{l_i}(x;\phi))
+$$
+
+可以立刻被改写为
+
+$$
+z_i=\text{argmax}\left[{\mathbf{l_i}(x;\phi)-\log (-\log \mathbf{u})}\right], u_j\sim \text{Uniform}(0,1).
+$$
+
+我们就可以作reparameterization trick了：
+
+$$
+E_{z\sim q(z|x;\phi)}[\log p(x|z;\theta)]=E_{u\sim \text{Uniform}(0,1)}[\log p(x|\text{argmax}[\mathbf{l}(x;\phi)-\log (-\log \mathbf{u})];\theta)].
+$$
+
+当然，因为argmax会丢失一定的gradient信息，实际一般采用一个比例的softmax代替argmax（注意这里的softmax和之前的softmax已经不是一个来源了）：
+
+$$
+J(\theta;\phi)=E_{u\sim \text{Uniform}(0,1)}\left[\log p\left(x\mid\text{softmax}\left[\frac{\mathbf{l}(x;\phi)-\log (-\log \mathbf{u})}{\tau}\right];\theta\right)\right]-\text{KL term},
+$$
+
+这里 $\tau$ 取的比较小，甚至可以采用annealing的方法。这样最后得到的模型就是2017年提出的著名的**Gumbel-Softmax VAE**。
+
+可以看出，Gumbel-Softmax VAE解决了之前我们Loss对 $K$ 指数级别依赖性的问题。但它依然不是特别优秀——有一个costly的softmax operator（对 $K$ 个数计算softmax），这使得它仍然只能把 $K$ 扩展到100左右，只是普通VAE的水准。对于更大、更为modern的模型， $K$ 一般要是几千，这样的方法依然吃不消。
+
+##### 4.2.1.2 VQ-VAE (Vector Quantized VAE)
+
+同是2017年提出的VQ-VAE认为我们应该改变思路：如果一个固定的 $x$ 直接给出固定的 $z$ ，就**根本不需要计算期望**了！这一模型提出，我们可以用nearest neighbor刻画最后选出的 $z$ ：创造一个dictionary $E$ ，包含 $K$ 个向量 $e_1,\cdots,e_K$ 。对每一个 $x$ ，我们根据一个neural net计算一个向量 $\mathbf{g}(x;\phi)$ ，然后计算
+
+$$
+z_i=\text{argmin}_j||\mathbf{g}(x;\phi)_i-e_j||.
+$$

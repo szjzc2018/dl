@@ -88,7 +88,7 @@ Please edit on **source.md**. After that, you should run `check_format.py` and p
 ## Note on good writing habits (in order our formater to work):
 
 1. Don't put `$$` formulas in environments (e.g. quoting/enumerating)
-2. Make sure that you use `\*` instead of `*` in formulas
+2. Make sure that you use `\star` instead of `*` in formulas
 3. Bold or Italic contents shouldn't start or end with formulas (i.e. `$`)
 """
 
@@ -99,4 +99,4 @@ if __name__ == '__main__':
     # open('./test_out.md','w').write(preprocess(s))
     f = open(OUT,'w')
     f.write(README)
-    f.write(format(s.replace('^*','^\*')))
+    f.write(format(s.replace('^*','^{\star}').replace('^\*','^{\star}')))
