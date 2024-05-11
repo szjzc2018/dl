@@ -243,7 +243,7 @@ $$
 
 #### 2.1.2.6 PixelCNN
 
-PixelCNN是一个特殊的Autoregressive Flow，它把卷积和Autoregressive的生成结合起来。但和之前的Autoregressive Flow不同的是，我们干脆**不要$z$，直接通过$x$进行生成**。具体来说，模型输入一个每个分量都是quantized（比如，每个像素都是0或1）的图片，而autoregressive地预测每个分量是0或者1的概率（即**每个Pixel的输出结果由前面的所有pixel值决定**）。
+PixelCNN是一个特殊的Autoregressive Flow，它把卷积和Autoregressive的生成结合起来。但和之前的Autoregressive Flow不同的是，我们干脆**不要$z$，直接通过$x$进行生成**。具体来说，模型输入一个每个分量都是quantized（比如，每个像素都是0或1）的图片，而autoregressive地预测每个分量是0或者1的**概率**（或者logits）。
 
 可以参考下面的伪代码来理解训练的过程：
 ```python

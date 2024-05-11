@@ -473,9 +473,9 @@ $$
 
 > **Implement Details**
 >
-> 你可能会奇怪：我们之前提到的PixelCNN的输入是一个图片，而现在我们encoder给出的latent variable是一列数字（参看上面的插图），那该怎样训练PixelCNN呢？这是因为我们前面的介绍只是一个概念上的描述：实际应用中的encoder中的 $\mathbf{g}$ 是一个卷积网络，其输出是一个图片一样的feature map。我们在找nearest neighbor的时候也是固定一个$(h,w)$对，对所有的$c=0,1,\cdots,C-1$得到一个向量 $\mathbf{g}_{h,w}\in \mathbb{R}^C$，然后在dictionary里面找这个向量的nearest neighbor。这样，可以看到latent variable并非之前图片里展示的那样是一个数列，而是一个$H\times W$的index tensor。
+> 你可能会奇怪：我们之前提到的PixelCNN的输入是一个图片，而现在我们encoder给出的latent variable是一列数字（参看上面的插图），那该怎样训练PixelCNN呢？这是因为我们前面的介绍只是一个概念上的描述：实际应用中的encoder中的 $\mathbf{g}$ 是一个卷积网络，其输出是$C\times H\times W$（注意$H,W$不是原始图片的大小）的feature map。我们在找nearest neighbor的时候也是固定一个$(h,w)$对，对所有的$c=0,1,\cdots,C-1$得到一个向量 $\mathbf{g}_{h,w}\in \mathbb{R}^C$，然后在dictionary里面找这个向量的nearest neighbor。这样，可以看到latent variable并非之前图片里展示的那样是一个数列，而是一个$H\times W$的index tensor。
 
-实验上，VQ-VAE和它的scale up版本在生成图片的实际质量方面吊打（尤其是在avoid mode collapse方面）当时最强的BigGAN。这是VAE的发展跨出的巨大一步，阐释了structured prior的重要性。
+实验上，VQ-VAE和它的scale up版本在生成图片的实际质量方面已经超过了（尤其是在avoid mode collapse方面）当时最强的BigGAN。这是VAE的发展跨出的巨大一步，阐释了structured prior的重要性。
 
 #### 4.2.1.3 VAE with Discrete Latent: Further Applications
 
@@ -574,7 +574,11 @@ Deep Learning的一个好习惯是把所有的东西都搞的非常deep。但在
 为了解决这个问题，提出了许多pratical skills。
 - **Increase the capability within layer**, instead of stacking layers：我们可以别搞那么多层，只要把每一层里面的MLP搞得表现力很强，就也可以增强模型的表现力。同时，也可以加入"pre process"和"post process"的MLP。
 - **Add virtual edges/nodes**：我们可以在图中加入一些虚拟的边或者节点，这样可以在保持模型GC层数不便的情况下增加每个点的receptive field，从而增强模型的表现力。具体地，比如edge augmentation，把所有最短路为2的点连边；或者在找朋友的问题中，可以建一个大的节点代表一个社区或者共性（比如，把所有清华的学生和“清华”这个virtual node连边）。
-- **Skip Connection**：
+- **Skip Connection**：我们可以在aggregation之后再加上前一层的信息，这样可以像ResNet一样增强模型的表现力。也就是说，我们的update方式是$h^{(l)}=\text{GC}(h^{(l-1)})+h^{(l-1)}$.
+
+但值得一提，就算stack了很多层GC，我们的网络依然存在实质性的缺陷。举一个例子，假设下面两个图中的所有点都具有相同的feature，那我们的模型就不能区分$v_1$和$v_2$，因为他们有着完全相同的computational graph。为了解决这一问题，出现了position-aware GNN和identity-aware GNN，可以刻画出每一个点的位置信息。
+
+![](../assets/image-28-5.png)
 
 #### 4.2.2.5 Edge Prediction
 
@@ -601,3 +605,7 @@ Deep Learning的一个好习惯是把所有的东西都搞的非常deep。但在
 因为任何时刻模型都可以看到所有节点，因此这种方法更加强大，也因此更为popular。
 
 结束了？不！就如我们在Word Embedding中提到的那样，但凡是二分类问题，我们必须又有正例，又有负例。这个问题该如何选取负例呢？当然，可以随机选取；但如果仔细思考，有些问题随机选取负例不是特别有效：比如判断两个人是否是朋友，如果你选取两个从未谋面的人（比如一个在中国，一个在美国）作为负例，那么这个负例的信息量就不是特别大。因此，在具体问题中，人们一般会有很specific的heuristic来选取负例。
+
+#### 4.2.2.6 Further Applications
+
+从最简单的问题引入，我们介绍了GNN。但现在，GNN已经被应用到了许多更高级的领域。一个重要的话题是**Graph Generation**，比如著名的**AlphaFold**，它可以根据一个蛋白质的结构生成一个立体结构图。当然，其具体实现中GNN只是一个部件，除此之外还需要transformer等结构，甚至一些专业知识。

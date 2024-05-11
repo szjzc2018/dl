@@ -358,17 +358,21 @@ $$
 ## 4.2 Structures in Deep Learning
 ### 4.2.1 Structured Priors in Generative Models
 
-我们之前的很多基于latent variable的generative models都是从一个来自均匀高斯分布的latent variable $z$ 中采样来生成图片的。当时我们提出，这样的采样方式并没有太大的问题，因为本身latent variable代表什么就是[由我们的模型定义的](#2133-choose-of-and).但实际上Gaussian（或者说任何连续的分布）都会带来一定的问题：
+我们之前的很多基于latent variable的generative models都是从一个来自均匀高斯分布的latent variable $z$ 中采样来生成图片的。当时我们提出，这样的采样方式并没有太大的问题，因为本身latent variable代表什么就是由我们的模型定义的.但实际上Gaussian（或者说任何连续的分布）都会带来一定的问题：
 - Mode Collapse：因为 $z$ 本身是uni-modal的，因此我们的模型也会倾向于生成uni-modal的图片；
 - Blurry Samples：考虑到 $z$ 本身是可以以无穷小的精度连续变化的，但 $z$ 的很小的变化一定会带来图片在两个mode之间的渐变，因此我们的模型很可能生成模糊的图片。
 
-一个直接的想法是我们把 $z$ 变成**离散的**。具体地，我们把每一个图片 $x$ 对应的latent variable $z$ 设置为一个序列 $z_1,z_2,\cdots,z_h$ （ $h$ 仍然是之前的hidden size），并且取
+一个直接的想法是我们把 $z$ 变成**离散的**。具体地，我们把每一个图片 $x$ 对应的latent variable $z$ 设置为一个序列 $z_1,z_2,\cdots,z_h$ （ $h$ 仍然是之前的hidden dim），并且取
 
 $$
 z_i\in \text{Uniform}(0,1,\cdots,K-1).
 $$
 
-这样直接解决了这样两个问题。当然，我们的这个更改对于VAE最为友善：我们完全不需要修改encoder的具体形式，它仍然是 $p(x|z;\theta)$ ；而decoder则可以简单地修改为一个softmax，取
+这样直接解决了这样两个问题。
+
+![](./assets/image-25-5.png)
+
+可以看到，我们的这个更改对于VAE最为友善：我们完全不需要修改encoder的具体形式，它仍然是 $p(x|z;\theta)$ ；而decoder则可以简单地修改为一个softmax，取
 
 $$
 z_i\sim q_i(z_i|x;\phi)=\text{softmax}(\mathbf{l_i}(x;\phi))
@@ -381,7 +385,7 @@ $$
 J(\theta,\phi)=E_{z\sim q(z|x;\phi)}[\log p(x|z;\theta)]-\text{KL}(q(z|x;\phi)||p(z))
 $$
 
-第二项总归是好说的，但第一项现在就**不能用之前的reparameterization trick了**：我们必须遍历离散分布中所有可能的 $z$ 。这并不实际可行——它的计算量随着 $K$ 的增大呈指数级增长。我们需要一些新的方法。
+第二项总归是好说的，但第一项现在就**不能用之前的reparameterization trick了**：我们必须遍历离散分布中所有可能的 $z$ 。这并不实际可行——它的计算量随着 $h$ 的增大呈指数级增长。我们需要一些新的方法。
 
 #### 4.2.1.1 Gumbel-Softmax VAE
 我们来介绍一个极其逆天的trick。先别管我们在干什么，请看下去……
@@ -455,7 +459,7 @@ $$
 
 这里 $\tau$ 取的比较小，甚至可以采用annealing的方法。这样最后得到的模型就是2017年提出的著名的**Gumbel-Softmax VAE**。
 
-可以看出，Gumbel-Softmax VAE解决了之前我们Loss对 $K$ 指数级别依赖性的问题。但它依然不是特别优秀——有一个costly的softmax operator（对 $K$ 个数计算softmax），这使得它仍然只能把 $K$ 扩展到100左右，只是普通VAE的水准。对于更大、更为modern的模型， $K$ 一般要是几千，这样的方法依然吃不消。
+可以看出，Gumbel-Softmax VAE解决了之前我们Loss对hidden size $h$ 指数级别依赖性的问题。但它依然不是特别优秀——有一个costly的softmax operator（对 $K$ 个数计算softmax），这使得它仍然只能把 $K$ 扩展到100左右，只是普通VAE的水准。对于更大、更为modern的模型， $K$ 一般要是几千，这样的方法依然吃不消。
 
 #### 4.2.1.2 VQ-VAE (Vector Quantized VAE)
 
@@ -464,3 +468,183 @@ $$
 $$
 z_i=\text{argmin}_j||\mathbf{g}(x;\phi)_i-e_j||.
 $$
+
+但是另外一个问题就是，现在的proposal $q$ 不容易训练。回想之前，我们通过加入KL divergence penalty来保证proposal和真实的latent variable的分布尽量接近；但现在 $q(z|x)$ 是一个“狄拉克分布”，我们没有办法再用KL刻画。VQ-VAE并不试着解决这个问题，而是决定另辟蹊径，直接用一个新的loss function来训练dictionary $E$ （注意其中的 $K$ 个向量都是可训练的）和neural net $\mathbf{g}$ 。
+
+直观上来说，我们希望每一次抽中的 $\mathbf{g}(x;\phi)$ 都尽量接近于一个dictionary中的真实向量。这启示我们在loss中加入一项
+
+$$
+L_{\text{dict}}=\sum_{i=1}^h|e_{z_i}-\mathbf{g}(x;\phi)_i|^2.
+$$
+
+但这样naive的构造存在cheating solution：所有 $z_i$ 全都和 $\mathbf{g}$ 聚到一起。VQ-VAE通过构造两个Loss并分别stop gradient解决这个问题：
+
+$$
+L_{\text{dict}}=\sum_{i=1}^h|e_{z_i}-\text{SG}[\mathbf{g}(x;\phi)_i]|^2+\beta \sum_{i=1}^h|\text{SG}[e_{z_i}]-\mathbf{g}(x;\phi)_i|^2,
+$$
+
+其中 $\beta$ 是超参数。这样总的loss就是（注意每个 $x$ 唯一确定了 $z$ ）
+
+$$
+L=\log p(x|z({x;\phi});\theta)+\sum_{i=1}^h|e_{z_i}-\text{SG}[\mathbf{g}(x;\phi)_i]|^2+\beta \sum_{i=1}^h|\text{SG}[e_{z_i}]-\mathbf{g}(x;\phi)_i|^2
+$$
+
+当然实验上也有许多技巧，比如对变得很快的neural net $\mathbf{g}(x;\phi)$ 求running average等等。
+
+> 你可能会疑问：之前我们的VAE的推导中，KL的那一项不是为了约束ELBO和真实的目标尽量接近而引入的吗？那去掉这一项为什么还能work？这里，有一个解释：可以不要把目标看作是VAE的目标，而是一个“随机化”的AE的目标——我们依然是给一个 $x$ ，生成一个 $z$ ，然后再生成一个 $x$ ；只不过，现在给定 $z$ 生成 $x$ 的过程含有随机性。这样，我们的目标当然就是让数据集里面的 $x$ 的log prob最大。
+
+
+最后，我们还要面对一个问题——我们该如何sample呢？之前，我们只需要从标准高斯分布中随机采出 $z$ 即可；但现在我们完全不知道训练出来的 $q(z)$ 是什么样子！但别急——我们还可以**再训练一个neural network** $p(z;\psi)$ ，让他来近似 $q(z)$ 。
+
+如何设计这样的一个 $p(z;\psi)$ 呢？考虑到我们的 $z$ 本身就是一个每个分量都是index的vector，对于图片我们自然选用离散的pixelCNN，而对于音频等sequential data我们可以用WaveNet或者Transformer。具体训练过程就是，当整个VQ-VAE训练完毕后，我们对每一个数据集中的元素 $x$ 用encoder生成 $z$ ，再把所有的这些 $z$ 做成数据集来训练 $p(z;\psi)$ 。
+
+> **Implement Details**
+>
+> 你可能会奇怪：我们之前提到的PixelCNN的输入是一个图片，而现在我们encoder给出的latent variable是一列数字（参看上面的插图），那该怎样训练PixelCNN呢？这是因为我们前面的介绍只是一个概念上的描述：实际应用中的encoder中的 $\mathbf{g}$ 是一个卷积网络，其输出是 $C\times H\times W$ （注意 $H,W$ 不是原始图片的大小）的feature map。我们在找nearest neighbor的时候也是固定一个 $(h,w)$ 对，对所有的 $c=0,1,\cdots,C-1$ 得到一个向量 $\mathbf{g}_{h,w}\in \mathbb{R}^C$ ，然后在dictionary里面找这个向量的nearest neighbor。这样，可以看到latent variable并非之前图片里展示的那样是一个数列，而是一个 $H\times W$ 的index tensor。
+
+实验上，VQ-VAE和它的scale up版本在生成图片的实际质量方面已经超过了（尤其是在avoid mode collapse方面）当时最强的BigGAN。这是VAE的发展跨出的巨大一步，阐释了structured prior的重要性。
+
+#### 4.2.1.3 VAE with Discrete Latent: Further Applications
+
+许多吊打的图片生成模型都是基于含有Discrete Latent Variable的VAE的（主要是我们前面提到的Gumbel-Softmax VAE和VQ-VAE）。下面简单介绍几个这样的模型和它们的改进思路：
+
+**VQ-VAE 2**： 它的改进在于叠两层VQ-VAE：Top Level负责获得全局的信息，而Bottom Level用来给出细节。两层encoder都使用ResNet，而decoder也采用ResNet来upsample。
+
+![](./assets/image-26.png) 
+
+在sample的时候，我们训练一个PixelCNN和Attention结合的模型，并让生成底层的 $x$ 的时候用到上层 $z$ 的信息。
+
+![](./assets/image-27.png)
+
+**DALL-E**：DALL-E实现了zero-shot text to image generation：只需要给出一段文字就可以产生图片。它并非采用VQ-VAE，而是采用高维度的Gumbel-Softmax VAE。对于文字，它采用Transformer来处理，在生成图片的时候加入对文字的cross attention。
+
+### 4.2.2 Deep Learning For Structured Data
+
+设想这样的一个问题：一个朋友圈中有若干人，每个人的年龄、性别、职业、爱好等等信息都是已知的。同时，我们还知道一些人之间存在关系（比如，是朋友）。现在，假设有一件产品需要推销，如果已知一部分人接受了这个产品（比如记作绿色），另一部分人拒绝了（记作红色），我们希望根据这些信息预测其他人的接受程度。我们能否训练一个神经网络完成这个任务呢？
+
+![](./assets/image-28.png)
+
+
+容易发现，这样的问题可以抽象为一个图。这就引出了**Graph Neural Network**的概念：神经网络需要学习出来图中的某种结构，然后根据这个结构进行预测。这样的任务也就被称为**Graph Learning**。
+
+#### 4.2.2.1 Representation Learning
+
+解决一般的Graph Learning问题的通常思路是通过给定的Graph来学习一个 graph的representation。具体地，一个图包含的信息是：
+- 顶点集 $V$ 和已知的邻居 $N(V)$ ；
+- 每一个节点的feature $x(v)$ , $v\in V$ ；
+- 若干partial label $y(v)\in \{0,1,\text{Unknown}\}$
+
+而一个representation是对每一个 $v$ 给出一个 $z(v)$ ，并且这个特征可以直接用作预测（比如对于分类的问题，直接把 $z(v)$ 接一个MLP就可以给出 $y(v)$ ）。但注意 $z(v)$ 必须用到顶点集中其他顶点的信息，否则就丢失了图具有的额外特性。
+
+为了解决这个问题，**Graph Convolutional Network**（GCN）诞生了。
+
+#### 4.2.2.2 GCNs
+
+在图片中，我们知道卷积提取相近的pixel中的信息；而现在，我们在图中希望干一样的事情。但问题在于，之前一个图片的pixel周围一定恰好是8个pixel，因此我们可以固定一个卷积核；但现在每一个图中节点的邻居个数是未知的。因此，我们必须采用一个新的方法。
+
+GCN使用**Message Aggregation**的思路解决这一问题：我们给每一个点 $v$ 创造一个信息 $h(v)$ ，再让它的邻居把自己的信息传给这个节点。这样，每个点可以具有自己的信息和邻居的信息，从而获得了更多的判断依据来使用MLP等结构作出更好的representation。当然，具体处理这些aggregate到的信息的方式带来了很多variants。最早的message aggregation方案是简单地把信息进行average pooling（即求平均数）。
+
+当然，很容易想到，我们肯定不希望只获得到邻居这一层的信息，因此我们可以作multi-layer aggregation：这也很好理解，我们从一个节点出发bfs两层，并按照层数分别整理信息。这就把一个简单的Graph Convolution升级成为了一个**Graph Convolution Network**。
+
+![](./assets/image-29.png)
+
+我们可以看到，在GCN中，图只是作为拓扑结构出现（决定了计算树的形状）；而其最关键的思想就是从边上传递信息作aggregation。
+
+我们也可以把GCN用数学公式表达出来。首先，我们写出Graph Convolution的表达式：
+
+$$
+z(v)=\sigma\left(W\frac{1}{\text{deg}(v)}\sum_{u\sim v}x(u)+B\cdot x(v)\right),
+$$
+
+其中 $W,B$ 是两个矩阵（当然，也可以换成MLP）。这整个过程可以抽象为
+
+$$
+Z=\text{GC}(G,X),
+$$
+
+其中 $X$ 代表图上每个vertex的feature组合出来的集合，而 $Z$ 代表输出的每个vertex的representation。然后，我们可以用多层GC组合出GCN：
+
+$$
+H^{(l)}=\text{GC}(G,H^{(l-1)}), l=1,\cdots,L.
+$$
+
+其中 $H^{(0)}=X,H^{(L)}=Z$ 就分别是我们想要的输入和输出。
+
+#### 4.2.2.3 Aggregation Functions
+
+我们前面提到，不同的Aggregation方式会产生不同的GCN variants。现在就让我们介绍一些（除了前面最简单的average pooling之外）常见的Aggregation方法。
+
+**GraphSage**这篇2017年的paper介绍了几种aggregation的方式：我们可以把信息拿过来过MLP，再做max pooling；也可以使用LSTM。但注意到LSTM的处理方式对信息的顺序有依赖，因此我们可以先做一个random shuffle再过LSTM。同时，在训练的时候，我们可以采用layer norm，也可以对节点或者feature进行dropout。
+
+当然，你可能会想到，对于这样的permutation invariant的问题，我们为何不采用attention呢？2018年在attention刚提出后立刻产生的**GAT**（Graph Attention Network）就是这样的一个模型。它的思路就是对每个节点，从自己向其他所有邻居计算attention。我们甚至可以用multi-head的版本。值得一提，**GAT也可以被视作一种transformer**，只不过在极大量级的输入长度（等于图的节点个数）上大量的attention都被mask掉了，只剩下邻居之间的互相attention。
+
+另外一个研究从representation power的方向考虑。他发现，之前许多基于pooling的aggregation很容易丢失信息。就从最直观的例子而言，以average pooling为例，我们的模型不能区分
+
+$$
+\dbinom{1.0}{0.5},\dbinom{0.5}{1.0}
+$$
+
+和
+
+$$
+\dbinom{0.75}{0.75},\dbinom{0.75}{0.75}
+$$
+
+这两种完全不同的，邻居传来的信息。因此，2019年提出了**Graph Isomorphism Network**（GIN）：我们用**求和**作Aggregaton Function！直观上，如果normalize的合适，我们的模型应该能学会区分上面两种情况。不仅如此，数学上还证明了这样的模型可以具有和判断图isomorphism 的WL-test相同的表现力。粗略地说，WL-test的算法是给每个点赋值一个 $h$ ，然后不断按照
+
+$$
+h(v)^{(l)}=\text{hash}\left(h(v)^{(l-1)};h(N(v))^{(l-1)}\right),
+$$
+
+更新，直到不变。可以看出，isomorphic的图最后得到的各个 $h$ 一定排序后是一样的。可以看出，我们的GIN的hidden state的更新方式
+
+$$
+h(v)^{(l)}=\text{MLP}\left(h(v)^{(l-1)};\sum_{u\in N(v)}h(u)^{(l-1)}\right)
+$$
+
+和WL-test十分相像。这也就是为什么它具有很强的表现能力。（当然，具体的数学证明是十分复杂的）
+
+#### 4.2.2.4 More On Representation Powers: Can we stack GCs?
+
+Deep Learning的一个好习惯是把所有的东西都搞的非常deep。但在GCN这里，结论是：**更多层的GC aggregation并不会增强模型的表现能力**。这里的问题叫做**Over-smoothing**：叠了太多层GC之后，所有的点的representation都倾向于变成一个相同的数。这一问题的来源在于receptive field：就如同“世界上任何两个人都是六步之内的朋友”，几层叠加后，每一个点都感受到了所有节点的信息。这样就会使得所有的点的representation被磨平。
+
+![](./assets/image-32.png)
+
+为了解决这个问题，提出了许多pratical skills。
+- **Increase the capability within layer**, instead of stacking layers：我们可以别搞那么多层，只要把每一层里面的MLP搞得表现力很强，就也可以增强模型的表现力。同时，也可以加入"pre process"和"post process"的MLP。
+- **Add virtual edges/nodes**：我们可以在图中加入一些虚拟的边或者节点，这样可以在保持模型GC层数不便的情况下增加每个点的receptive field，从而增强模型的表现力。具体地，比如edge augmentation，把所有最短路为2的点连边；或者在找朋友的问题中，可以建一个大的节点代表一个社区或者共性（比如，把所有清华的学生和“清华”这个virtual node连边）。
+- **Skip Connection**：我们可以在aggregation之后再加上前一层的信息，这样可以像ResNet一样增强模型的表现力。也就是说，我们的update方式是 $h^{(l)}=\text{GC}(h^{(l-1)})+h^{(l-1)}$ .
+
+但值得一提，就算stack了很多层GC，我们的网络依然存在实质性的缺陷。举一个例子，假设下面两个图中的所有点都具有相同的feature，那我们的模型就不能区分 $v_1$ 和 $v_2$ ，因为他们有着完全相同的computational graph。为了解决这一问题，出现了position-aware GNN和identity-aware GNN，可以刻画出每一个点的位置信息。
+
+![](./assets/image-28-5.png)
+
+#### 4.2.2.5 Edge Prediction
+
+我们来考虑另外一类在Graph Learning方面十分有趣的问题：**Edge Prediction**。这个问题的设定是，我们有一个图，有一些边已知相连或不相连，但是有一些边是未知的。我们希望根据已知的边来预测缺失的边。这个问题在很多实际应用中都有着很多应用，比如在社交网络中可以判断两个未见面的人是否会互相关注，或者作**recommandation system**：给定一个User-Item的二部图，我们可以根据用户已经买过的商品来推荐他可能会喜欢的商品。
+
+可以想到，这个问题可以用之前的GCN解决：可以试着用两个点的representation $z(v)$ 来预测它们之间是否有边。但这一问题的主要难点实际上是如何**寻找数据集**。
+
+可能有些反直觉的是，这个问题的表述一般不是说给定一堆图（比如 $10^4$ 张），在这些图上训练后投入一个新的图的计算；而是说给定**一张很大的图**（比如 $10^4$ 个节点），其中已知很多连边和不连边（比如，连了 $10^6$ 条边），但现在我们需要判断剩下一些边（比如 $10^4$ 条）是否相连。这样，如何利用已知信息进行训练就成了一个比较大的问题。
+
+第一种解决方法被称为**Inductive Link Prediction Split**：把一张图分成若干部分，第一个部分用作train，第二部分用作valid，第三部分用作test。每一部分都有一系列message edge（代表给定的已经连接的边，GCN就用这些边传递信息）和supervision edge（代表需要预测的信息）。在不同部分之间的边则直接被我们丢弃。
+
+![](./assets/image-30.png)
+
+容易看出，这种方法可能丢掉很重要的关系，也可能带来实际应用的不便：最后需要预测的边可能在第一部分和第三部分之间。因此，另一种方法被提出：**Transductive Link Prediction Split**。这种方法的思路是，我们把所有的边分为四份：
+1. Training Message Edges
+2. Training Supervision Edges
+3. Validation Edges
+4. Test Edges
+
+在训练的时候，模型拿着1预测2；在valid的时候，模型拿着1,2预测3；在test的时候，模型拿着1,2,3预测4。如图所示。
+
+![](./assets/image-31.png)
+
+因为任何时刻模型都可以看到所有节点，因此这种方法更加强大，也因此更为popular。
+
+结束了？不！就如我们在Word Embedding中提到的那样，但凡是二分类问题，我们必须又有正例，又有负例。这个问题该如何选取负例呢？当然，可以随机选取；但如果仔细思考，有些问题随机选取负例不是特别有效：比如判断两个人是否是朋友，如果你选取两个从未谋面的人（比如一个在中国，一个在美国）作为负例，那么这个负例的信息量就不是特别大。因此，在具体问题中，人们一般会有很specific的heuristic来选取负例。
+
+#### 4.2.2.6 Further Applications
+
+从最简单的问题引入，我们介绍了GNN。但现在，GNN已经被应用到了许多更高级的领域。一个重要的话题是**Graph Generation**，比如著名的**AlphaFold**，它可以根据一个蛋白质的结构生成一个立体结构图。当然，其具体实现中GNN只是一个部件，除此之外还需要transformer等结构，甚至一些专业知识。

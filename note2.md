@@ -214,7 +214,7 @@ $$
 同时，通过对 $z$ 的插值，先取定四个值 $z^0,z^1,z^2,z^3$ ，然后让 $z=cos \alpha (cos \beta z^0 + sin \beta z^1)+ sin \alpha (cos \beta z^2 + sin \beta z^3)$ ,可以观察到图片的特征连续变化的过程。
 ![alt text](./assets/image-3.png)
 
-#### 2.1.2.6 Autoregressive Flow
+#### 2.1.2.5 Autoregressive Flow
 
 在说Autogegressive flow之前，我们先说一下Autoregressive(自回归)的概念，它是一个数学上的概念，表示用 $x_1,x_2,...x_{i-1}$ 来预测 $x_i$ (和之前的区别是用自己预测自己！之前是 $z_1,z_2,...,z_{i}$ 获得 $x_i$ ).也就是说，我们是不是可以 $f(x)$ 的第 $i$ 个分量不仅仅依赖于 $z$ ,而是也依赖于前面的分量？
 
@@ -241,17 +241,57 @@ $$
 
 在这里，你可能会注意到一个问题，在不同的计算过程中 $\alpha$ 和 $\mu$ 接受的参数个数不一样！如何解决这个问题呢？其实很简单，我们直接让它们接受的参数个数就是维度 $d$ ,然后把第 $i$ 维之后的全部设成0就行了，这个过程称为mask.具体实现就是让输入逐分量乘上一个 $mask=(1,\dots,1,0,\dots,0)$ .
 
-我们介绍一个相关的工作:Pixel CNN.
+#### 2.1.2.6 PixelCNN
 
-它的想法是仍然保持图片的形状 $N\times N$ ,然后 $\alpha$ 和 $\mu$ 是卷积层，并且通过卷积核mask掉后一半的方式保证autoregressive. (也就是说, $x_{ij}$ 实际上依赖于 $x_{uv}(|u-i|\le d,|v-j|\le d)$ 且 $x_{uv}在x_{ij}$ 前面的那些 $x$ )
+PixelCNN是一个特殊的Autoregressive Flow，它把卷积和Autoregressive的生成结合起来。但和之前的Autoregressive Flow不同的是，我们干脆**不要 $z$ ，直接通过 $x$ 进行生成**。具体来说，模型输入一个每个分量都是quantized（比如，每个像素都是0或1）的图片，而autoregressive地预测每个分量是0或者1的**概率**（或者logits）。
 
-更加细节地，你可能会注意到如果我们连续经过多层这样的卷积，那么第 $j$ 层的 $x_{u,v}$ 最多获得前一层 $x_{u,v-1}$ 的信息，从而最多获得第 $j-2$ 层 $x_{u,v-2}$ 的信息，这样下去足够多层以后每个像素都会变成0（越界默认为0）从而，我们只在第一层mask掉中间的像素，剩余每层不mask掉中间的像素，这样经过多层以后， $x_{ij}$ 仍然有最初层 $x_{i,j-1}$ 的信息！
+可以参考下面的伪代码来理解训练的过程：
+```python
+def train_epoch():
+    for images,_ in train_loader:
+        # convert an image to 0, 1
+        images = (images > 0.33).float() 
+        # the model outputs the probability of each pixel being 0 or 1
+        logits = model(images) 
+        # for pixels that is really 0, the probability of being 0 should be high, and vice versa
+        loss = F.binary_cross_entropy_with_logits(logits, images) 
+```
+
+而生成的过程可以如下地展示：
+```python
+
+def generate_image():
+    pixels = torch.zeros(N, C, H, W)  # Initialize pixels as zeros
+    with torch.no_grad():
+        # Iterate over the pixels because generation has to be done autoregressively
+        for c in range(C):
+            for h in range(H):
+                for w in range(W):
+                    # Feed the whole array and retrieving the pixel value probabilities for the next pixel.
+                    logit = model(pixels)[:, c, h, w]
+                    prob = logit.sigmoid()
+                    # Use the probabilities to pick the pixel value and append the value to the image frame.
+                    pixels[:, c, h, w] = torch.bernoulli(prob)
+```
+
+但一个处理图片的卷积网络应该如何保证Autoregressive性质呢？一个重要的想法就是 **masked convolution**。我们直接把卷积核mask掉后一半：
 
 ![alt text](./assets/image-5.png)
 
-如果你足够细心的话，你可能会发现，即使经过足够多层这样的操作， $x_{i,j}$ 获得的信息也并不是初始的所有在 $x_{i,j}$ 之前的像素的信息，而是会有视野盲区（想想为什么！或者可以看下面的图），但这并不会有特别大的影响，而也可以采用某些修正（你能想到吗？）避免这个问题，这被称为Gated Pixel CNN.
+也就是说, $x_{ij}$ 实际上依赖于 $x_{uv}(|u-i|\le d,|v-j|\le d)$ 且 $x_{uv}在x_{ij}$ 前面的那些 $x$ 。 
 
-![alt text](./assets/image-6.png)
+但这只是一个intuition，在实际应用中我们要考虑很多细节上的问题。
+
+第一个问题在于，如果我们只是简单地这样做，多层迭代之后所有像素都会变成0！下面的插图展示了这一点：黄色部分代表着center pixel（红色）的receptive field（即使用上面的mask迭代若干次后，哪些pixel能影响这个center pixel）。可以发现，卷积很多次之后，黄色部分不断向左上角移动，可以料到它会逐渐移出图片非零的范围。
+
+![](./assets/image-5-5.png)
+
+为了解决这个问题，我们引入**两类不同的mask**：A类和B类。上面展示的就是A类mask，而B类mask则是将正中心的0设置为1。在多层卷积时，只有第一层使用A类，其余都使用B类。可以发现，这样经过多层以后，receptive field并不会不断整体向左上移动。
+
+![](./assets/image-5-75.png)
+
+但你看着这个图，就立刻会发现第二个问题：即使经过足够多层这样的操作， $x_{i,j}$ 获得的信息也并不是初始的所有在 $x_{i,j}$ 之前的像素的信息，而是会有视野盲区（这被称为tooth-shaped receptive field）。虽然这并不会有特别大的影响，而也可以采用某些修正（你能想到吗？）避免这个问题，这被称为**Gated Pixel CNN**。具体的实现可以参考[原始论文](https://arxiv.org/abs/1606.05328)。
+
 
 #### 2.1.2.7 AF v.s. IAF
 
