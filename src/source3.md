@@ -85,7 +85,7 @@ o_t=\sigma(W_o[h_{t-1},X_t]+b_o)
 $$
 
 $$
-\tilde{C_t}= tanh(W_c[h_{t-1},X_t]+b_c)
+\tilde{C_t}= \tanh(W_c[h_{t-1},X_t]+b_c)
 $$
 
 $$
@@ -159,7 +159,7 @@ r_t=\sigma(W_r[h_{t-1},X_t])
 $$
 
 $$
-\tilde{h_t}=tanh(W[h_{t-1},r_t\circ X_t])
+\tilde{h_t}=\tanh(W[h_{t-1},r_t\circ X_t])
 $$
 
 $$
