@@ -471,11 +471,11 @@ $$
 $$
 
 $$
-=\frac{kq}{kq+u_{\theta}}\sum_w (\tilde{p}(w|h)\frac{\nabla u_{\theta}}{u_{\theta}}-\nabla u_{\theta})
+=\sum_w\frac{kq}{kq+u_{\theta}} (\tilde{p}(w|h)\frac{\nabla u_{\theta}}{u_{\theta}}-\nabla u_{\theta})
 $$
 
 $$
-=\frac{kq}{kq+u_{\theta}}\sum_w (\tilde{p}(w|h)-u_{\theta})\nabla(\log u_{\theta})
+=\sum_w\frac{kq}{kq+u_{\theta}} (\tilde{p}(w|h)-u_{\theta})\nabla(\log u_{\theta})
 $$
 
 而我们上面已经计算过(~~我猜你已经忘了~~):
