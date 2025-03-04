@@ -212,6 +212,7 @@ $$
 ![alt text](./assets/image-2.png)
 
 同时，通过对 $z$ 的插值，先取定四个值 $z^0,z^1,z^2,z^3$ ，然后让 $z=cos \alpha (cos \beta z^0 + sin \beta z^1)+ sin \alpha (cos \beta z^2 + sin \beta z^3)$ ,可以观察到图片的特征连续变化的过程。
+
 ![alt text](./assets/image-3.png)
 
 #### 2.1.2.5 Autoregressive Flow
